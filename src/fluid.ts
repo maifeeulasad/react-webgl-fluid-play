@@ -243,15 +243,19 @@ export function fluidSim(el, config = {}) {
     return uniforms
   }
 
-  function compileShader(type, source, keywords) {
+  const compileShader = (type: GLenum, source: string, keywords?: string[]): WebGLShader => {
     source = addKeywords(source, keywords)
 
-    const shader = gl.createShader(type)
+    const shader: WebGLShader | null = gl.createShader(type)
+    if (!shader) {
+      throw new Error('Failed to create shader')
+    }
     gl.shaderSource(shader, source)
     gl.compileShader(shader)
 
-    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS))
-      throw gl.getShaderInfoLog(shader)
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+      throw new Error(gl.getShaderInfoLog(shader))
+    }
 
     return shader
   }
