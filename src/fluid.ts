@@ -1,3 +1,4 @@
+// @ts-nocheck
 /*
 MIT License
 
@@ -22,7 +23,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-export function fluidSim(el, config) {
+export function fluidSim(el, config = {}) {
   const canvas = el
   resizeCanvas()
 
