@@ -131,6 +131,10 @@ export function fluidSim(el, configParam = {}) {
   pointers.push(new pointerPrototype())
 
   const { gl, ext } = getWebGLContext(canvas)
+  
+  const isMobile = (): boolean => {
+    return /Mobi|Android/i.test(navigator.userAgent)
+  }
 
   if (isMobile()) {
     config.DYE_RESOLUTION = 512
@@ -224,10 +228,6 @@ export function fluidSim(el, configParam = {}) {
 
     const status = gl.checkFramebufferStatus(gl.FRAMEBUFFER)
     return status === gl.FRAMEBUFFER_COMPLETE
-  }
-
-  const isMobile = (): boolean => {
-    return /Mobi|Android/i.test(navigator.userAgent)
   }
 
   class Material {
