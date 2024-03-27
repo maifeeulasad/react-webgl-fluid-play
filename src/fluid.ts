@@ -260,14 +260,11 @@ export function fluidSim(el, config = {}) {
     return shader
   }
 
-  function addKeywords(source, keywords) {
-    if (keywords == null) return source
-    let keywordsString = ''
-    keywords.forEach(keyword => {
-      keywordsString += '#define ' + keyword + '\n'
-    })
-    return keywordsString + source
-  }
+  const addKeywords = (source: string, keywords?: string[]): string => {
+    if (keywords == null) return source;
+    const keywordsString = keywords.map(keyword => `#define ${keyword}`).join('\n');
+    return `${keywordsString}\n${source}`;
+  };
 
   const baseVertexShader = compileShader(gl.VERTEX_SHADER, `
     precision highp float;
