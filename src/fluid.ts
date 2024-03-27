@@ -47,11 +47,41 @@ import {
   gradientSubtractShaderInstructions,
 } from "./shaders"
 
-export function fluidSim(el, config = {}) {
+interface Config {
+  TRIGGER: string;
+  SIM_RESOLUTION: number;
+  DYE_RESOLUTION: number;
+  CAPTURE_RESOLUTION: number;
+  DENSITY_DISSIPATION: number;
+  VELOCITY_DISSIPATION: number;
+  PRESSURE: number;
+  PRESSURE_ITERATIONS: number;
+  CURL: number;
+  SPLAT_RADIUS: number;
+  SPLAT_FORCE: number;
+  SPLAT_COUNT: number;
+  SHADING: boolean;
+  COLORFUL: boolean;
+  COLOR_UPDATE_SPEED: number;
+  PAUSED: boolean;
+  BACK_COLOR: { r: number; g: number; b: number };
+  TRANSPARENT: boolean;
+  BLOOM: boolean;
+  BLOOM_ITERATIONS: number;
+  BLOOM_RESOLUTION: number;
+  BLOOM_INTENSITY: number;
+  BLOOM_THRESHOLD: number;
+  BLOOM_SOFT_KNEE: number;
+  SUNRAYS: boolean;
+  SUNRAYS_RESOLUTION: number;
+  SUNRAYS_WEIGHT: number;
+}
+
+export function fluidSim(el, configParam = {}) {
   const canvas = el
   resizeCanvas()
 
-  config = {
+  let config: Config = {
     TRIGGER: 'hover',
     SIM_RESOLUTION: 1024,
     DYE_RESOLUTION: 1024,
@@ -79,8 +109,8 @@ export function fluidSim(el, config = {}) {
     SUNRAYS: true,
     SUNRAYS_RESOLUTION: 196,
     SUNRAYS_WEIGHT: 1.0,
-    ...config,
-  }
+    ...configParam,
+  };
 
   function pointerPrototype() {
     this.id = -1
