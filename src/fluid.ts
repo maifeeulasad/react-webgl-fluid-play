@@ -144,30 +144,30 @@ export function fluidSim(el, configParam = {}) {
 
   // startGUI()
 
-  function getWebGLContext(canvas) {
-    const params = { alpha: true, depth: false, stencil: false, antialias: false, preserveDrawingBuffer: false }
+  function getWebGLContext(canvas: HTMLCanvasElement) {
+    const params: WebGLContextAttributes = { alpha: true, depth: false, stencil: false, antialias: false, preserveDrawingBuffer: false }
 
-    let gl = canvas.getContext('webgl2', params)
+    let gl = canvas.getContext('webgl2', params) as WebGL2RenderingContext | null
     const isWebGL2 = !!gl
     if (!isWebGL2)
-      gl = canvas.getContext('webgl', params) || canvas.getContext('experimental-webgl', params)
+      gl = canvas.getContext('webgl', params) as WebGLRenderingContext | null || canvas.getContext('experimental-webgl', params) as WebGLRenderingContext | null
 
-    let halfFloat
-    let supportLinearFiltering
+    let halfFloat: OES_texture_half_float | null
+    let supportLinearFiltering: OES_texture_half_float_linear | null
     if (isWebGL2) {
       gl.getExtension('EXT_color_buffer_float')
-      supportLinearFiltering = gl.getExtension('OES_texture_float_linear')
+      supportLinearFiltering = gl.getExtension('OES_texture_float_linear') as OES_texture_half_float_linear | null
     } else {
-      halfFloat = gl.getExtension('OES_texture_half_float')
-      supportLinearFiltering = gl.getExtension('OES_texture_half_float_linear')
+      halfFloat = gl.getExtension('OES_texture_half_float') as OES_texture_half_float | null
+      supportLinearFiltering = gl.getExtension('OES_texture_half_float_linear') as OES_texture_half_float_linear | null
     }
 
     gl.clearColor(0.0, 0.0, 0.0, 1.0)
 
-    const halfFloatTexType = isWebGL2 ? gl.HALF_FLOAT : halfFloat.HALF_FLOAT_OES
-    let formatRGBA
-    let formatRG
-    let formatR
+    const halfFloatTexType = isWebGL2 ? gl.HALF_FLOAT : halfFloat!.HALF_FLOAT_OES
+    let formatRGBA: WebGLTextureFormat | null
+    let formatRG: WebGLTextureFormat | null
+    let formatR: WebGLTextureFormat | null
 
     if (isWebGL2) {
       formatRGBA = getSupportedFormat(gl, gl.RGBA16F, gl.RGBA, halfFloatTexType)
@@ -178,7 +178,6 @@ export function fluidSim(el, configParam = {}) {
       formatRG = getSupportedFormat(gl, gl.RGBA, gl.RGBA, halfFloatTexType)
       formatR = getSupportedFormat(gl, gl.RGBA, gl.RGBA, halfFloatTexType)
     }
-
 
     return {
       gl,
