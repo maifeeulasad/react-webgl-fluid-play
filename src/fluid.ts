@@ -227,7 +227,7 @@ export function fluidSim(el, configParam = {}) {
     return status === gl.FRAMEBUFFER_COMPLETE
   }
 
-  function isMobile() {
+  const isMobile = (): boolean => {
     return /Mobi|Android/i.test(navigator.userAgent)
   }
 
