@@ -169,11 +169,11 @@ export function fluidSim(el: HTMLCanvasElement, configParam = {}) {
   let bloomFramebuffers: FBO[] = []
   pointers.push(new Pointer())
 
-  const { gl, ext } = getWebGLContext(canvas)
-  
   const isMobile = (): boolean => {
     return /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
   }
+
+  const { gl, ext } = getWebGLContext(canvas)
 
   if (isMobile()) {
     config.DYE_RESOLUTION = 512
@@ -729,11 +729,10 @@ export function fluidSim(el: HTMLCanvasElement, configParam = {}) {
 
   let lastUpdateTime = Date.now()
   let colorUpdateTimer = 0.0
-  update()
-
   let lastFrameTime = 0
   const targetFPS = isMobile() ? 45 : 60 // Lower FPS target for mobile
   const frameInterval = 1000 / targetFPS
+  update()
 
   function update() {
     const now = performance.now()
