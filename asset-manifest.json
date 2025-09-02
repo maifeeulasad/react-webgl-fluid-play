@@ -1,8 +1,8 @@
 {
   "files": {
-    "main.js": "./static/js/main.bb10d002.js",
-    "index.html": "./index.html",
-    "main.bb10d002.js.map": "./static/js/main.bb10d002.js.map"
+    "main.js": "/maifeeulasad/react-webgl-fluid-play/static/js/main.bb10d002.js",
+    "index.html": "/maifeeulasad/react-webgl-fluid-play/index.html",
+    "main.bb10d002.js.map": "/maifeeulasad/react-webgl-fluid-play/static/js/main.bb10d002.js.map"
   },
   "entrypoints": [
     "static/js/main.bb10d002.js"
