@@ -196,6 +196,34 @@ const Canvas = ({ height: heightProps, width: widthProps }: ICanvasProps) => {
         WebkitUserSelect: "none", // Prevent selection on iOS
       }}
     >
+      {/* Header */}
+      <div
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: isMobile ? '80px' : '60px',
+          background: 'rgba(0, 0, 0, 0.7)',
+          backdropFilter: 'blur(10px)',
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          alignItems: isMobile ? 'flex-start' : 'center',
+          justifyContent: isMobile ? 'center' : 'space-between',
+          padding: isMobile ? '10px 15px' : '0 20px',
+          zIndex: 1000,
+          borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+        }}
+      >
+        <div style={{ marginBottom: isMobile ? '5px' : 0 }}>
+          <h1 style={{ color: '#fff', fontSize: isMobile ? '1.2rem' : '1.5rem', margin: 0, fontWeight: 'bold' }}>React WebGL Fluid Play</h1>
+          <p style={{ color: '#fff', opacity: 0.8, margin: 0, fontSize: isMobile ? '0.8rem' : '0.9rem' }}>By Maifee Ul Asad</p>
+        </div>
+        <div style={{ color: '#fff', fontSize: isMobile ? '0.7rem' : '0.8rem', opacity: 0.7, textAlign: isMobile ? 'left' : 'right' }}>
+          <p style={{ margin: 0 }}>All necessary citations are mentioned in the codebase.</p>
+          <p style={{ margin: 0 }}>Based on <a href="https://github.com/PavelDoGreat/WebGL-Fluid-Simulation" target="_blank" rel="noopener noreferrer" style={{ color: '#4fc3f7' }}>PavelDoGreat's WebGL-Fluid-Simulation</a></p>
+        </div>
+      </div>
       {/* Fallback display when WebGL fails */}
       {error && !isLoading && (
         <div
