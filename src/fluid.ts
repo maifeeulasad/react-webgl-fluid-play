@@ -79,6 +79,43 @@ interface Config {
 
 type WebGLTextureFormat = { internalFormat: number; format: number; }
 
+interface FBO {
+  texture: WebGLTexture;
+  fbo: WebGLFramebuffer;
+  width: number;
+  height: number;
+  texelSizeX: number;
+  texelSizeY: number;
+  attach(id: number): number;
+}
+
+interface DoubleFBO {
+  width: number;
+  height: number;
+  texelSizeX: number;
+  texelSizeY: number;
+  read: FBO;
+  write: FBO;
+  swap(): void;
+}
+
+interface Texture {
+  texture: WebGLTexture;
+  width: number;
+  height: number;
+  attach(id: number): number;
+}
+
+interface Color {
+  r: number;
+  g: number;
+  b: number;
+}
+
+interface Uniforms {
+  [key: string]: WebGLUniformLocation | null;
+}
+
 export function fluidSim(el: HTMLCanvasElement, configParam = {}) {
   const canvas = el
   resizeCanvas()
@@ -129,7 +166,7 @@ export function fluidSim(el: HTMLCanvasElement, configParam = {}) {
 
   let pointers: Pointer[] = []
   let splatStack: number[] = []
-  let bloomFramebuffers: any[] = []
+  let bloomFramebuffers: FBO[] = []
   pointers.push(new Pointer())
 
   const { gl, ext } = getWebGLContext(canvas)
@@ -237,16 +274,16 @@ export function fluidSim(el: HTMLCanvasElement, configParam = {}) {
   }
 
   class Material {
-    vertexShader: any;
+    vertexShader: WebGLShader;
     fragmentShaderSource: string;
-    programs: any[];
-    activeProgram: any;
-    uniforms: any;
+    programs: { [key: number]: WebGLProgram };
+    activeProgram: WebGLProgram | null;
+    uniforms: Uniforms;
 
-    constructor(vertexShader: any, fragmentShaderSource: string) {
+    constructor(vertexShader: WebGLShader, fragmentShaderSource: string) {
       this.vertexShader = vertexShader
       this.fragmentShaderSource = fragmentShaderSource
-      this.programs = []
+      this.programs = {}
       this.activeProgram = null
       this.uniforms = {}
     }
@@ -275,10 +312,10 @@ export function fluidSim(el: HTMLCanvasElement, configParam = {}) {
   }
 
   class Program {
-    uniforms: any;
-    program: any;
+    uniforms: Uniforms;
+    program: WebGLProgram;
 
-    constructor(vertexShader: any, fragmentShader: any) {
+    constructor(vertexShader: WebGLShader, fragmentShader: WebGLShader) {
       this.uniforms = {}
       this.program = createProgram(vertexShader, fragmentShader)
       this.uniforms = getUniforms(this.program)
@@ -289,8 +326,11 @@ export function fluidSim(el: HTMLCanvasElement, configParam = {}) {
     }
   }
 
-  function createProgram(vertexShader: any, fragmentShader: any) {
+  function createProgram(vertexShader: WebGLShader, fragmentShader: WebGLShader): WebGLProgram {
     let program = gl.createProgram()
+    if (!program) {
+      throw new Error('Failed to create program')
+    }
     gl.attachShader(program, vertexShader)
     gl.attachShader(program, fragmentShader)
     gl.linkProgram(program)
@@ -301,12 +341,14 @@ export function fluidSim(el: HTMLCanvasElement, configParam = {}) {
     return program
   }
 
-  function getUniforms(program: any) {
-    let uniforms = []
+  function getUniforms(program: WebGLProgram): Uniforms {
+    let uniforms: Uniforms = {}
     let uniformCount = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS)
     for (let i = 0; i < uniformCount; i++) {
-      let uniformName = gl.getActiveUniform(program, i).name
-      uniforms[uniformName] = gl.getUniformLocation(program, uniformName)
+      let uniformName = gl.getActiveUniform(program, i)?.name
+      if (uniformName) {
+        uniforms[uniformName] = gl.getUniformLocation(program, uniformName)
+      }
     }
     return uniforms
   }
@@ -384,20 +426,20 @@ export function fluidSim(el: HTMLCanvasElement, configParam = {}) {
     gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0)
     gl.enableVertexAttribArray(0)
 
-    return (destination: any) => {
+    return (destination: WebGLFramebuffer | null) => {
       gl.bindFramebuffer(gl.FRAMEBUFFER, destination)
       gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0)
     }
   })()
 
-  let dye: any
-  let velocity: any
-  let divergence: any
-  let curl: any
-  let pressure: any
-  let bloom: any
-  let sunrays: any
-  let sunraysTemp: any
+  let dye: DoubleFBO
+  let velocity: DoubleFBO
+  let divergence: FBO
+  let curl: FBO
+  let pressure: DoubleFBO
+  let bloom: FBO
+  let sunrays: FBO
+  let sunraysTemp: FBO
 
   let ditheringTexture = createTextureAsync()
 
@@ -481,7 +523,7 @@ export function fluidSim(el: HTMLCanvasElement, configParam = {}) {
     sunraysTemp = createFBO(res.width, res.height, r!.internalFormat, r!.format, texType, filtering)
   }
 
-  function createFBO(w: number, h: number, internalFormat: number, format: number, type: number, param: number) {
+  function createFBO(w: number, h: number, internalFormat: number, format: number, type: number, param: number): FBO {
     gl.activeTexture(gl.TEXTURE0)
     let texture = gl.createTexture()
     gl.bindTexture(gl.TEXTURE_2D, texture)
@@ -515,7 +557,7 @@ export function fluidSim(el: HTMLCanvasElement, configParam = {}) {
     }
   }
 
-  function createDoubleFBO(w: number, h: number, internalFormat: number, format: number, type: number, param: number) {
+  function createDoubleFBO(w: number, h: number, internalFormat: number, format: number, type: number, param: number): DoubleFBO {
     let fbo1 = createFBO(w, h, internalFormat, format, type, param)
     let fbo2 = createFBO(w, h, internalFormat, format, type, param)
 
@@ -544,7 +586,7 @@ export function fluidSim(el: HTMLCanvasElement, configParam = {}) {
     }
   }
 
-  function resizeFBO(target: any, w: number, h: number, internalFormat: number, format: number, type: number, param: number) {
+  function resizeFBO(target: FBO, w: number, h: number, internalFormat: number, format: number, type: number, param: number): FBO {
     let newFBO = createFBO(w, h, internalFormat, format, type, param)
     copyProgram.bind()
     gl.uniform1i(copyProgram.uniforms.uTexture, target.attach(0))
@@ -552,7 +594,7 @@ export function fluidSim(el: HTMLCanvasElement, configParam = {}) {
     return newFBO
   }
 
-  function resizeDoubleFBO(target: any, w: number, h: number, internalFormat: number, format: number, type: number, param: number) {
+  function resizeDoubleFBO(target: DoubleFBO, w: number, h: number, internalFormat: number, format: number, type: number, param: number): DoubleFBO {
     if (target.width === w && target.height === h)
       return target
     target.read = resizeFBO(target.read, w, h, internalFormat, format, type, param)
@@ -564,7 +606,7 @@ export function fluidSim(el: HTMLCanvasElement, configParam = {}) {
     return target
   }
 
-  function createTextureAsync(url?: string) {
+  function createTextureAsync(url?: string): Texture {
     let texture = gl.createTexture()
     gl.bindTexture(gl.TEXTURE_2D, texture)
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
@@ -735,7 +777,7 @@ export function fluidSim(el: HTMLCanvasElement, configParam = {}) {
     dye.swap()
   }
 
-  function render(target: any) {
+  function render(target: FBO | null) {
     if (config.BLOOM)
       applyBloom(dye.read, bloom)
     if (config.SUNRAYS) {
@@ -762,19 +804,19 @@ export function fluidSim(el: HTMLCanvasElement, configParam = {}) {
     drawDisplay(fbo, width, height)
   }
 
-  function drawColor(fbo: any, color: any) {
+  function drawColor(fbo: WebGLFramebuffer | null, color: Color) {
     colorProgram.bind()
     gl.uniform4f(colorProgram.uniforms.color, color.r, color.g, color.b, 1)
     blit(fbo)
   }
 
-  function drawCheckerboard(fbo: any) {
+  function drawCheckerboard(fbo: WebGLFramebuffer | null) {
     checkerboardProgram.bind()
     gl.uniform1f(checkerboardProgram.uniforms.aspectRatio, canvas.width / canvas.height)
     blit(fbo)
   }
 
-  function drawDisplay(fbo: any, width: number, height: number) {
+  function drawDisplay(fbo: WebGLFramebuffer | null, width: number, height: number) {
     displayMaterial.bind()
     if (config.SHADING)
       gl.uniform2f(displayMaterial.uniforms.texelSize, 1.0 / width, 1.0 / height)
@@ -790,7 +832,7 @@ export function fluidSim(el: HTMLCanvasElement, configParam = {}) {
     blit(fbo)
   }
 
-  function applyBloom(source: any, destination: any) {
+  function applyBloom(source: FBO, destination: FBO) {
     if (bloomFramebuffers.length < 2)
       return
 
@@ -839,7 +881,7 @@ export function fluidSim(el: HTMLCanvasElement, configParam = {}) {
     blit(destination.fbo)
   }
 
-  function applySunrays(source: any, mask: any, destination: any) {
+  function applySunrays(source: FBO, mask: FBO, destination: FBO) {
     gl.disable(gl.BLEND)
     sunraysMaskProgram.bind()
     gl.uniform1i(sunraysMaskProgram.uniforms.uTexture, source.attach(0))
@@ -853,7 +895,7 @@ export function fluidSim(el: HTMLCanvasElement, configParam = {}) {
     blit(destination.fbo)
   }
 
-  function blur(target: any, temp: any, iterations: number) {
+  function blur(target: FBO, temp: FBO, iterations: number) {
     blurProgram.bind()
     for (let i = 0; i < iterations; i++) {
       gl.uniform2f(blurProgram.uniforms.texelSize, target.texelSizeX, 0.0)
@@ -886,7 +928,7 @@ export function fluidSim(el: HTMLCanvasElement, configParam = {}) {
     }
   }
 
-  function splat(x: number, y: number, dx: number, dy: number, color: any) {
+  function splat(x: number, y: number, dx: number, dy: number, color: Color) {
     gl.viewport(0, 0, velocity.width, velocity.height)
     splatProgram.bind()
     gl.uniform1i(splatProgram.uniforms.uTarget, velocity.read.attach(0))
@@ -1013,7 +1055,7 @@ export function fluidSim(el: HTMLCanvasElement, configParam = {}) {
     return delta
   }
 
-  function generateColor() {
+  function generateColor(): Color {
     let c = HSVtoRGB(Math.random(), 1.0, 1.0)
     c.r *= 0.15
     c.g *= 0.15
@@ -1021,7 +1063,7 @@ export function fluidSim(el: HTMLCanvasElement, configParam = {}) {
     return c
   }
 
-  function HSVtoRGB(h: number, s: number, v: number) {
+  function HSVtoRGB(h: number, s: number, v: number): Color {
     let r = 0, g = 0, b = 0, i, f, p, q, t
     i = Math.floor(h * 6)
     f = h * 6 - i
@@ -1050,7 +1092,7 @@ export function fluidSim(el: HTMLCanvasElement, configParam = {}) {
     }
   }
 
-  function normalizeColor(input: any) {
+  function normalizeColor(input: Color): Color {
     let output = {
       r: input.r / 255,
       g: input.g / 255,
@@ -1065,7 +1107,7 @@ export function fluidSim(el: HTMLCanvasElement, configParam = {}) {
     return (value - min) % range + min
   }
 
-  function getResolution(resolution: number) {
+  function getResolution(resolution: number): { width: number; height: number } {
     let aspectRatio = gl.drawingBufferWidth / gl.drawingBufferHeight
     if (aspectRatio < 1)
       aspectRatio = 1.0 / aspectRatio
@@ -1079,7 +1121,7 @@ export function fluidSim(el: HTMLCanvasElement, configParam = {}) {
       return { width: min, height: max }
   }
 
-  function getTextureScale(texture: any, width: number, height: number) {
+  function getTextureScale(texture: Texture, width: number, height: number): { x: number; y: number } {
     return {
       x: width / texture.width,
       y: height / texture.height
