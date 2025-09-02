@@ -18,6 +18,7 @@ const Canvas = ({ height: heightProps, width: widthProps }: ICanvasProps) => {
   });
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [showWelcome, setShowWelcome] = useState<boolean>(true);
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const animationFrameRef = useRef<number>();
@@ -145,6 +146,14 @@ const Canvas = ({ height: heightProps, width: widthProps }: ICanvasProps) => {
       setIsLoading(false);
     }
   }, [canvasRef, width, height]);
+
+  // Hide welcome after simulation loads or on click
+  useEffect(() => {
+    if (!isLoading && !error && showWelcome) {
+      const timer = setTimeout(() => setShowWelcome(false), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [isLoading, error, showWelcome]);
 
   // Prevent default touch behaviors that interfere with the simulation
   useEffect(() => {
@@ -349,6 +358,32 @@ const Canvas = ({ height: heightProps, width: widthProps }: ICanvasProps) => {
               Optimizing for mobile device
             </p>
           )}
+        </div>
+      )}
+
+      {showWelcome && !isLoading && !error && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            background: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 500,
+            backdropFilter: 'blur(5px)',
+            cursor: 'pointer',
+          }}
+          onClick={() => setShowWelcome(false)}
+        >
+          <div style={{ textAlign: 'center', color: '#fff' }}>
+            <h1 style={{ fontSize: isMobile ? '2rem' : '3rem', margin: 0, fontWeight: 'bold' }}>Welcome to React WebGL Fluid Play</h1>
+            <p style={{ fontSize: isMobile ? '1rem' : '1.2rem', opacity: 0.8, margin: '10px 0' }}>Interactive fluid simulation by Maifee Ul Asad</p>
+            <p style={{ fontSize: '0.9rem', opacity: 0.6 }}>Click anywhere or wait to start</p>
+          </div>
         </div>
       )}
 
