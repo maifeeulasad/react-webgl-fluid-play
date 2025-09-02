@@ -193,30 +193,85 @@ export function fluidSim(el: HTMLCanvasElement, configParam = {}) {
   // startGUI()
 
   function getWebGLContext(canvas: HTMLCanvasElement) {
-    const params: WebGLContextAttributes = {
+    // Check if canvas has valid dimensions
+    if (canvas.width === 0 || canvas.height === 0) {
+      throw new Error('Canvas must have valid dimensions before initializing WebGL')
+    }
+
+    console.log('Initializing WebGL context...', { width: canvas.width, height: canvas.height })
+
+    // Start with basic parameters that are widely supported
+    const baseParams: WebGLContextAttributes = {
       alpha: true,
       depth: false,
       stencil: false,
       antialias: false,
-      preserveDrawingBuffer: false,
-      powerPreference: isMobile() ? 'low-power' : 'default' // Better battery life on mobile
+      preserveDrawingBuffer: false
     }
 
-    let gl: any = canvas.getContext('webgl2', params)
-    const isWebGL2 = !!gl
-    if (!isWebGL2)
-      gl = canvas.getContext('webgl', params) || canvas.getContext('experimental-webgl', params)
+    let gl: any = null
+    let isWebGL2 = false
+
+    // Try WebGL2 first
+    try {
+      gl = canvas.getContext('webgl2', baseParams)
+      if (gl) {
+        isWebGL2 = true
+        console.log('WebGL2 context created successfully')
+        console.log('WebGL context details:', {
+          renderer: gl.getParameter(gl.getExtension('WEBGL_debug_renderer_info')?.UNMASKED_RENDERER_WEBGL || gl.RENDERER),
+          vendor: gl.getParameter(gl.getExtension('WEBGL_debug_renderer_info')?.UNMASKED_VENDOR_WEBGL || gl.VENDOR),
+          version: gl.getParameter(gl.VERSION),
+          maxTextureSize: gl.getParameter(gl.MAX_TEXTURE_SIZE)
+        })
+      }
+    } catch (e) {
+      console.warn('WebGL2 not available, trying WebGL1:', e)
+    }
+
+    // Fallback to WebGL1 if WebGL2 failed
+    if (!gl) {
+      try {
+        gl = canvas.getContext('webgl', baseParams) || canvas.getContext('experimental-webgl', baseParams)
+        if (gl) {
+          console.log('WebGL1 context created successfully')
+          console.log('WebGL context details:', {
+            renderer: gl.getParameter(gl.getExtension('WEBGL_debug_renderer_info')?.UNMASKED_RENDERER_WEBGL || gl.RENDERER),
+            vendor: gl.getParameter(gl.getExtension('WEBGL_debug_renderer_info')?.UNMASKED_VENDOR_WEBGL || gl.VENDOR),
+            version: gl.getParameter(gl.VERSION),
+            maxTextureSize: gl.getParameter(gl.MAX_TEXTURE_SIZE)
+          })
+        }
+      } catch (e) {
+        console.error('WebGL1 also failed:', e)
+      }
+    }
 
     if (!gl) {
-      throw new Error('WebGL not supported. Please update your browser or try on a different device.')
+      throw new Error('WebGL not supported. Please update your browser or enable hardware acceleration.')
     }
 
-    // Check for required WebGL extensions on mobile
+    // Optional: Try to set power preference if supported (don't fail if not)
+    try {
+      if (isMobile() && 'powerPreference' in baseParams) {
+        // This is a newer feature, only apply if browser supports it
+        const mobileParams = { ...baseParams, powerPreference: 'low-power' as const }
+        const testGl = canvas.getContext('webgl', mobileParams)
+        if (testGl) {
+          gl = testGl
+          console.log('Low-power mode enabled for mobile')
+        }
+      }
+    } catch (e) {
+      console.warn('Power preference not supported, using default:', e)
+    }
+
+    // Check for required WebGL extensions (don't fail, just warn)
     if (isMobile()) {
       const requiredExtensions = ['OES_texture_float', 'OES_texture_float_linear']
       for (const ext of requiredExtensions) {
         if (!gl.getExtension(ext)) {
-          console.warn(`WebGL extension ${ext} not available. Some features may be disabled.`)
+          console.warn(`WebGL extension ${ext} not available. Some visual effects may be reduced.`)
         }
       }
     }

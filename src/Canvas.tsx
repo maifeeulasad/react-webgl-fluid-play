@@ -9,8 +9,13 @@ interface ICanvasProps {
 const Canvas = ({ height: heightProps, width: widthProps }: ICanvasProps) => {
   const [height, setHeight] = useState<number>(0);
   const [width, setWidth] = useState<number>(0);
-  const [isMobile, setIsMobile] = useState<boolean>(false);
-  const [isLandscape, setIsLandscape] = useState<boolean>(true);
+  // Detect mobile device immediately
+  const [isMobile, setIsMobile] = useState<boolean>(() => {
+    return /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  });
+  const [isLandscape, setIsLandscape] = useState<boolean>(() => {
+    return window.innerWidth > window.innerHeight;
+  });
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -54,7 +59,8 @@ const Canvas = ({ height: heightProps, width: widthProps }: ICanvasProps) => {
       } else {
         // Use visual viewport for better mobile support
         const visualViewport = window.visualViewport;
-        if (visualViewport && isMobile) {
+        const isMobileDevice = /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        if (visualViewport && isMobileDevice) {
           setHeight(visualViewport.height);
           setWidth(visualViewport.width);
         } else {
@@ -69,7 +75,7 @@ const Canvas = ({ height: heightProps, width: widthProps }: ICanvasProps) => {
       cancelAnimationFrame(animationFrameRef.current);
     }
     animationFrameRef.current = requestAnimationFrame(update);
-  }, [heightProps, widthProps, isMobile]);
+  }, [heightProps, widthProps]);
 
   useEffect(() => {
     updateDimensions();
@@ -97,23 +103,45 @@ const Canvas = ({ height: heightProps, width: widthProps }: ICanvasProps) => {
   // Initialize fluid simulation with error handling
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas || width === 0 || height === 0) return;
+    if (!canvas || width === 0 || height === 0) {
+      console.log('Canvas not ready:', { canvas: !!canvas, width, height });
+      return;
+    }
+
+    // Ensure canvas has the correct dimensions
+    if (canvas.width !== width || canvas.height !== height) {
+      console.log('Setting canvas dimensions:', { width, height });
+      canvas.width = width;
+      canvas.height = height;
+    }
+
+    // Double-check canvas has valid dimensions
+    if (canvas.width === 0 || canvas.height === 0) {
+      console.error('Canvas dimensions are still invalid after setting');
+      setError('Canvas dimensions are invalid. Please refresh the page.');
+      setIsLoading(false);
+      return;
+    }
 
     try {
       setIsLoading(true);
       setError(null);
 
-      // Set canvas size
-      canvas.width = width;
-      canvas.height = height;
+      console.log('Initializing fluid simulation with canvas:', {
+        width: canvas.width,
+        height: canvas.height,
+        clientWidth: canvas.clientWidth,
+        clientHeight: canvas.clientHeight
+      });
 
       // Initialize fluid simulation
       fluidSim(canvas);
 
       setIsLoading(false);
+      console.log('Fluid simulation initialized successfully');
     } catch (err) {
       console.error('Failed to initialize fluid simulation:', err);
-      setError('Failed to initialize WebGL. Please try refreshing the page.');
+      setError(`Failed to initialize WebGL: ${err instanceof Error ? err.message : 'Unknown error'}`);
       setIsLoading(false);
     }
   }, [canvasRef, width, height]);
@@ -168,35 +196,98 @@ const Canvas = ({ height: heightProps, width: widthProps }: ICanvasProps) => {
         WebkitUserSelect: "none", // Prevent selection on iOS
       }}
     >
-      {error && (
+      {/* Fallback display when WebGL fails */}
+      {error && !isLoading && (
         <div
           style={{
             position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            color: "#fff",
-            textAlign: "center",
-            fontFamily: "Arial, sans-serif",
-            zIndex: 1000,
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 999,
           }}
         >
-          <h2>⚠️ Error</h2>
-          <p>{error}</p>
-          <button
-            onClick={() => window.location.reload()}
+          <img
+            src="/logo512.png"
+            alt="Fluid Simulation Logo"
             style={{
-              padding: "10px 20px",
-              marginTop: "10px",
-              backgroundColor: "#007bff",
-              color: "#fff",
-              border: "none",
-              borderRadius: "5px",
-              cursor: "pointer",
+              width: "120px",
+              height: "120px",
+              marginBottom: "20px",
+              opacity: 0.8,
+            }}
+          />
+          <h1 style={{ color: "#fff", marginBottom: "10px", fontSize: "2rem" }}>
+            Fluid Simulation
+          </h1>
+          <p style={{ color: "#fff", opacity: 0.8, textAlign: "center", maxWidth: "400px", marginBottom: "20px" }}>
+            Interactive WebGL fluid simulation is not available on this device/browser.
+          </p>
+
+          {/* Error details and troubleshooting */}
+          <div
+            style={{
+              backgroundColor: "rgba(0, 0, 0, 0.8)",
+              padding: "20px",
+              borderRadius: "10px",
+              maxWidth: "500px",
+              textAlign: "center",
             }}
           >
-            Refresh Page
-          </button>
+            <h3 style={{ color: "#ff6b6b", marginBottom: "10px" }}>⚠️ WebGL Error</h3>
+            <p style={{ color: "#fff", marginBottom: "15px", lineHeight: "1.4" }}>{error}</p>
+            <div style={{ fontSize: "14px", opacity: 0.8, marginBottom: "15px" }}>
+              <p style={{ color: "#fff" }}>Try these solutions:</p>
+              <ul style={{ textAlign: "left", display: "inline-block", color: "#fff" }}>
+                <li>Enable hardware acceleration in your browser</li>
+                <li>Update your graphics drivers</li>
+                <li>Try a different browser (Chrome recommended)</li>
+                <li>Restart your browser</li>
+              </ul>
+            </div>
+            <button
+              onClick={() => {
+                setError(null);
+                setIsLoading(true);
+                // Force re-initialization
+                setTimeout(() => {
+                  window.location.reload();
+                }, 100);
+              }}
+              style={{
+                padding: "10px 20px",
+                marginRight: "10px",
+                backgroundColor: "#007bff",
+                color: "#fff",
+                border: "none",
+                borderRadius: "5px",
+                cursor: "pointer",
+                fontSize: "16px",
+              }}
+            >
+              Retry
+            </button>
+            <button
+              onClick={() => window.location.reload()}
+              style={{
+                padding: "10px 20px",
+                backgroundColor: "#6c757d",
+                color: "#fff",
+                border: "none",
+                borderRadius: "5px",
+                cursor: "pointer",
+                fontSize: "16px",
+              }}
+            >
+              Refresh Page
+            </button>
+          </div>
         </div>
       )}
 
