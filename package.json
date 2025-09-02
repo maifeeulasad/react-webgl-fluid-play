@@ -2,6 +2,16 @@
   "name": "react-webgl-fluid-play",
   "version": "0.1.0",
   "private": false,
+  "main": "src/index.tsx",
+  "types": "src/index.tsx",
+  "files": [
+    "src/",
+    "public/",
+    "README.md",
+    "LICENSE",
+    "package.json",
+    "tsconfig.json"
+  ],
   "author": "Maifee Ul Asad <maifeeulasad@gmail.com>",
   "dependencies": {
     "@testing-library/jest-dom": "^5.16.2",
