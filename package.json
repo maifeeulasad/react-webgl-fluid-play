@@ -17,10 +17,10 @@
     "type": "git",
     "url": "https://github.com/maifeeulasad/react-webgl-fluid-play.git"
   },
-  "homepage": "https://github.com/maifeeulasad/react-webgl-fluid-play",
   "bugs": {
     "url": "https://github.com/maifeeulasad/react-webgl-fluid-play/issues"
   },
+  "homepage": "./",
   "dependencies": {
     "@testing-library/jest-dom": "^5.16.2",
     "@testing-library/react": "^12.1.2",
