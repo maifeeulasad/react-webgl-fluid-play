@@ -1,4 +1,3 @@
-// @ts-nocheck
 /*
 MIT License
 
@@ -75,9 +74,12 @@ interface Config {
   SUNRAYS: boolean;
   SUNRAYS_RESOLUTION: number;
   SUNRAYS_WEIGHT: number;
+  IMMEDIATE?: boolean;
 }
 
-export function fluidSim(el, configParam = {}) {
+type WebGLTextureFormat = { internalFormat: number; format: number; }
+
+export function fluidSim(el: HTMLCanvasElement, configParam = {}) {
   const canvas = el
   resizeCanvas()
 
@@ -93,7 +95,7 @@ export function fluidSim(el, configParam = {}) {
     CURL: 2,
     SPLAT_RADIUS: 0.10,
     SPLAT_FORCE: 2000,
-    SPLAT_COUNT: parseInt(Math.random() * 20) + 5,
+    SPLAT_COUNT: Math.floor(Math.random() * 20) + 5,
     SHADING: true,
     COLORFUL: true,
     COLOR_UPDATE_SPEED: 5,
@@ -112,23 +114,23 @@ export function fluidSim(el, configParam = {}) {
     ...configParam,
   };
 
-  function pointerPrototype() {
-    this.id = -1
-    this.texcoordX = 0
-    this.texcoordY = 0
-    this.prevTexcoordX = 0
-    this.prevTexcoordY = 0
-    this.deltaX = 0
-    this.deltaY = 0
-    this.down = false
-    this.moved = false
-    this.color = [30, 0, 300]
+  class Pointer {
+    id: number = -1;
+    texcoordX: number = 0;
+    texcoordY: number = 0;
+    prevTexcoordX: number = 0;
+    prevTexcoordY: number = 0;
+    deltaX: number = 0;
+    deltaY: number = 0;
+    down: boolean = false;
+    moved: boolean = false;
+    color: { r: number; g: number; b: number } = { r: 30, g: 0, b: 300 };
   }
 
-  let pointers = []
-  let splatStack = []
-  let bloomFramebuffers = []
-  pointers.push(new pointerPrototype())
+  let pointers: Pointer[] = []
+  let splatStack: number[] = []
+  let bloomFramebuffers: any[] = []
+  pointers.push(new Pointer())
 
   const { gl, ext } = getWebGLContext(canvas)
   
@@ -151,10 +153,14 @@ export function fluidSim(el, configParam = {}) {
   function getWebGLContext(canvas: HTMLCanvasElement) {
     const params: WebGLContextAttributes = { alpha: true, depth: false, stencil: false, antialias: false, preserveDrawingBuffer: false }
 
-    let gl = canvas.getContext('webgl2', params) as WebGL2RenderingContext | null
+    let gl: any = canvas.getContext('webgl2', params)
     const isWebGL2 = !!gl
     if (!isWebGL2)
-      gl = canvas.getContext('webgl', params) as WebGLRenderingContext | null || canvas.getContext('experimental-webgl', params) as WebGLRenderingContext | null
+      gl = canvas.getContext('webgl', params) || canvas.getContext('experimental-webgl', params)
+
+    if (!gl) {
+      throw new Error('WebGL not supported')
+    }
 
     let halfFloat: OES_texture_half_float | null
     let supportLinearFiltering: OES_texture_half_float_linear | null
@@ -195,7 +201,7 @@ export function fluidSim(el, configParam = {}) {
     }
   }
 
-  function getSupportedFormat(gl, internalFormat, format, type) {
+  function getSupportedFormat(gl: any, internalFormat: number, format: number, type: number): WebGLTextureFormat | null {
     if (!supportRenderTextureFormat(gl, internalFormat, format, type)) {
       switch (internalFormat) {
         case gl.R16F:
@@ -213,7 +219,7 @@ export function fluidSim(el, configParam = {}) {
     }
   }
 
-  function supportRenderTextureFormat(gl, internalFormat, format, type) {
+  function supportRenderTextureFormat(gl: any, internalFormat: number, format: number, type: number): boolean {
     let texture = gl.createTexture()
     gl.bindTexture(gl.TEXTURE_2D, texture)
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
@@ -231,15 +237,21 @@ export function fluidSim(el, configParam = {}) {
   }
 
   class Material {
-    constructor(vertexShader, fragmentShaderSource) {
+    vertexShader: any;
+    fragmentShaderSource: string;
+    programs: any[];
+    activeProgram: any;
+    uniforms: any;
+
+    constructor(vertexShader: any, fragmentShaderSource: string) {
       this.vertexShader = vertexShader
       this.fragmentShaderSource = fragmentShaderSource
       this.programs = []
       this.activeProgram = null
-      this.uniforms = []
+      this.uniforms = {}
     }
 
-    setKeywords(keywords) {
+    setKeywords(keywords: string[]) {
       let hash = 0
       for (let i = 0; i < keywords.length; i++)
         hash += hashCode(keywords[i])
@@ -263,7 +275,10 @@ export function fluidSim(el, configParam = {}) {
   }
 
   class Program {
-    constructor(vertexShader, fragmentShader) {
+    uniforms: any;
+    program: any;
+
+    constructor(vertexShader: any, fragmentShader: any) {
       this.uniforms = {}
       this.program = createProgram(vertexShader, fragmentShader)
       this.uniforms = getUniforms(this.program)
@@ -274,7 +289,7 @@ export function fluidSim(el, configParam = {}) {
     }
   }
 
-  function createProgram(vertexShader, fragmentShader) {
+  function createProgram(vertexShader: any, fragmentShader: any) {
     let program = gl.createProgram()
     gl.attachShader(program, vertexShader)
     gl.attachShader(program, fragmentShader)
@@ -286,7 +301,7 @@ export function fluidSim(el, configParam = {}) {
     return program
   }
 
-  function getUniforms(program) {
+  function getUniforms(program: any) {
     let uniforms = []
     let uniformCount = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS)
     for (let i = 0; i < uniformCount; i++) {
@@ -348,7 +363,7 @@ export function fluidSim(el, configParam = {}) {
   const splatShader = compileShader(gl.FRAGMENT_SHADER, splatShaderInstructions)
 
   const advectionShader = compileShader(gl.FRAGMENT_SHADER, advectionShaderInstructions,
-    ext.supportLinearFiltering ? null : ['MANUAL_FILTERING']
+    ext.supportLinearFiltering ? undefined : ['MANUAL_FILTERING']
   )
 
   const divergenceShader = compileShader(gl.FRAGMENT_SHADER, divergenceShaderInstructions)
@@ -369,20 +384,20 @@ export function fluidSim(el, configParam = {}) {
     gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0)
     gl.enableVertexAttribArray(0)
 
-    return (destination) => {
+    return (destination: any) => {
       gl.bindFramebuffer(gl.FRAMEBUFFER, destination)
       gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0)
     }
   })()
 
-  let dye
-  let velocity
-  let divergence
-  let curl
-  let pressure
-  let bloom
-  let sunrays
-  let sunraysTemp
+  let dye: any
+  let velocity: any
+  let divergence: any
+  let curl: any
+  let pressure: any
+  let bloom: any
+  let sunrays: any
+  let sunraysTemp: any
 
   let ditheringTexture = createTextureAsync()
 
@@ -417,18 +432,18 @@ export function fluidSim(el, configParam = {}) {
     const filtering = ext.supportLinearFiltering ? gl.LINEAR : gl.NEAREST
 
     if (dye == null)
-      dye = createDoubleFBO(dyeRes.width, dyeRes.height, rgba.internalFormat, rgba.format, texType, filtering)
+      dye = createDoubleFBO(dyeRes.width, dyeRes.height, rgba!.internalFormat, rgba!.format, texType, filtering)
     else
-      dye = resizeDoubleFBO(dye, dyeRes.width, dyeRes.height, rgba.internalFormat, rgba.format, texType, filtering)
+      dye = resizeDoubleFBO(dye, dyeRes.width, dyeRes.height, rgba!.internalFormat, rgba!.format, texType, filtering)
 
     if (velocity == null)
-      velocity = createDoubleFBO(simRes.width, simRes.height, rg.internalFormat, rg.format, texType, filtering)
+      velocity = createDoubleFBO(simRes.width, simRes.height, rg!.internalFormat, rg!.format, texType, filtering)
     else
-      velocity = resizeDoubleFBO(velocity, simRes.width, simRes.height, rg.internalFormat, rg.format, texType, filtering)
+      velocity = resizeDoubleFBO(velocity, simRes.width, simRes.height, rg!.internalFormat, rg!.format, texType, filtering)
 
-    divergence = createFBO(simRes.width, simRes.height, r.internalFormat, r.format, texType, gl.NEAREST)
-    curl = createFBO(simRes.width, simRes.height, r.internalFormat, r.format, texType, gl.NEAREST)
-    pressure = createDoubleFBO(simRes.width, simRes.height, r.internalFormat, r.format, texType, gl.NEAREST)
+    divergence = createFBO(simRes.width, simRes.height, r!.internalFormat, r!.format, texType, gl.NEAREST)
+    curl = createFBO(simRes.width, simRes.height, r!.internalFormat, r!.format, texType, gl.NEAREST)
+    pressure = createDoubleFBO(simRes.width, simRes.height, r!.internalFormat, r!.format, texType, gl.NEAREST)
 
     initBloomFramebuffers()
     initSunraysFramebuffers()
@@ -441,7 +456,7 @@ export function fluidSim(el, configParam = {}) {
     const rgba = ext.formatRGBA
     const filtering = ext.supportLinearFiltering ? gl.LINEAR : gl.NEAREST
 
-    bloom = createFBO(res.width, res.height, rgba.internalFormat, rgba.format, texType, filtering)
+    bloom = createFBO(res.width, res.height, rgba!.internalFormat, rgba!.format, texType, filtering)
 
     bloomFramebuffers.length = 0
     for (let i = 0; i < config.BLOOM_ITERATIONS; i++) {
@@ -450,7 +465,7 @@ export function fluidSim(el, configParam = {}) {
 
       if (width < 2 || height < 2) break
 
-      let fbo = createFBO(width, height, rgba.internalFormat, rgba.format, texType, filtering)
+      let fbo = createFBO(width, height, rgba!.internalFormat, rgba!.format, texType, filtering)
       bloomFramebuffers.push(fbo)
     }
   }
@@ -462,11 +477,11 @@ export function fluidSim(el, configParam = {}) {
     const r = ext.formatR
     const filtering = ext.supportLinearFiltering ? gl.LINEAR : gl.NEAREST
 
-    sunrays = createFBO(res.width, res.height, r.internalFormat, r.format, texType, filtering)
-    sunraysTemp = createFBO(res.width, res.height, r.internalFormat, r.format, texType, filtering)
+    sunrays = createFBO(res.width, res.height, r!.internalFormat, r!.format, texType, filtering)
+    sunraysTemp = createFBO(res.width, res.height, r!.internalFormat, r!.format, texType, filtering)
   }
 
-  function createFBO(w, h, internalFormat, format, type, param) {
+  function createFBO(w: number, h: number, internalFormat: number, format: number, type: number, param: number) {
     gl.activeTexture(gl.TEXTURE0)
     let texture = gl.createTexture()
     gl.bindTexture(gl.TEXTURE_2D, texture)
@@ -492,7 +507,7 @@ export function fluidSim(el, configParam = {}) {
       height: h,
       texelSizeX,
       texelSizeY,
-      attach(id) {
+      attach(id: number) {
         gl.activeTexture(gl.TEXTURE0 + id)
         gl.bindTexture(gl.TEXTURE_2D, texture)
         return id
@@ -500,7 +515,7 @@ export function fluidSim(el, configParam = {}) {
     }
   }
 
-  function createDoubleFBO(w, h, internalFormat, format, type, param) {
+  function createDoubleFBO(w: number, h: number, internalFormat: number, format: number, type: number, param: number) {
     let fbo1 = createFBO(w, h, internalFormat, format, type, param)
     let fbo2 = createFBO(w, h, internalFormat, format, type, param)
 
@@ -529,7 +544,7 @@ export function fluidSim(el, configParam = {}) {
     }
   }
 
-  function resizeFBO(target, w, h, internalFormat, format, type, param) {
+  function resizeFBO(target: any, w: number, h: number, internalFormat: number, format: number, type: number, param: number) {
     let newFBO = createFBO(w, h, internalFormat, format, type, param)
     copyProgram.bind()
     gl.uniform1i(copyProgram.uniforms.uTexture, target.attach(0))
@@ -537,7 +552,7 @@ export function fluidSim(el, configParam = {}) {
     return newFBO
   }
 
-  function resizeDoubleFBO(target, w, h, internalFormat, format, type, param) {
+  function resizeDoubleFBO(target: any, w: number, h: number, internalFormat: number, format: number, type: number, param: number) {
     if (target.width === w && target.height === h)
       return target
     target.read = resizeFBO(target.read, w, h, internalFormat, format, type, param)
@@ -549,7 +564,7 @@ export function fluidSim(el, configParam = {}) {
     return target
   }
 
-  function createTextureAsync(url) {
+  function createTextureAsync(url?: string) {
     let texture = gl.createTexture()
     gl.bindTexture(gl.TEXTURE_2D, texture)
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
@@ -562,7 +577,7 @@ export function fluidSim(el, configParam = {}) {
       texture,
       width: 1,
       height: 1,
-      attach(id) {
+      attach(id: number) {
         gl.activeTexture(gl.TEXTURE0 + id)
         gl.bindTexture(gl.TEXTURE_2D, texture)
         return id
@@ -628,7 +643,7 @@ export function fluidSim(el, configParam = {}) {
     return false
   }
 
-  function updateColors(dt) {
+  function updateColors(dt: number) {
     if (!config.COLORFUL) return
 
     colorUpdateTimer += dt * config.COLOR_UPDATE_SPEED
@@ -642,7 +657,7 @@ export function fluidSim(el, configParam = {}) {
 
   function applyInputs() {
     if (splatStack.length > 0)
-      multipleSplats(splatStack.pop())
+      multipleSplats(splatStack.pop() as number)
 
     pointers.forEach(p => {
       if (p.moved) {
@@ -652,7 +667,7 @@ export function fluidSim(el, configParam = {}) {
     })
   }
 
-  function step(dt) {
+  function step(dt: number) {
     gl.disable(gl.BLEND)
     gl.viewport(0, 0, velocity.width, velocity.height)
 
@@ -720,7 +735,7 @@ export function fluidSim(el, configParam = {}) {
     dye.swap()
   }
 
-  function render(target) {
+  function render(target: any) {
     if (config.BLOOM)
       applyBloom(dye.read, bloom)
     if (config.SUNRAYS) {
@@ -747,19 +762,19 @@ export function fluidSim(el, configParam = {}) {
     drawDisplay(fbo, width, height)
   }
 
-  function drawColor(fbo, color) {
+  function drawColor(fbo: any, color: any) {
     colorProgram.bind()
     gl.uniform4f(colorProgram.uniforms.color, color.r, color.g, color.b, 1)
     blit(fbo)
   }
 
-  function drawCheckerboard(fbo) {
+  function drawCheckerboard(fbo: any) {
     checkerboardProgram.bind()
     gl.uniform1f(checkerboardProgram.uniforms.aspectRatio, canvas.width / canvas.height)
     blit(fbo)
   }
 
-  function drawDisplay(fbo, width, height) {
+  function drawDisplay(fbo: any, width: number, height: number) {
     displayMaterial.bind()
     if (config.SHADING)
       gl.uniform2f(displayMaterial.uniforms.texelSize, 1.0 / width, 1.0 / height)
@@ -775,7 +790,7 @@ export function fluidSim(el, configParam = {}) {
     blit(fbo)
   }
 
-  function applyBloom(source, destination) {
+  function applyBloom(source: any, destination: any) {
     if (bloomFramebuffers.length < 2)
       return
 
@@ -824,7 +839,7 @@ export function fluidSim(el, configParam = {}) {
     blit(destination.fbo)
   }
 
-  function applySunrays(source, mask, destination) {
+  function applySunrays(source: any, mask: any, destination: any) {
     gl.disable(gl.BLEND)
     sunraysMaskProgram.bind()
     gl.uniform1i(sunraysMaskProgram.uniforms.uTexture, source.attach(0))
@@ -838,7 +853,7 @@ export function fluidSim(el, configParam = {}) {
     blit(destination.fbo)
   }
 
-  function blur(target, temp, iterations) {
+  function blur(target: any, temp: any, iterations: number) {
     blurProgram.bind()
     for (let i = 0; i < iterations; i++) {
       gl.uniform2f(blurProgram.uniforms.texelSize, target.texelSizeX, 0.0)
@@ -851,13 +866,13 @@ export function fluidSim(el, configParam = {}) {
     }
   }
 
-  function splatPointer(pointer) {
+  function splatPointer(pointer: Pointer) {
     let dx = pointer.deltaX * config.SPLAT_FORCE
     let dy = pointer.deltaY * config.SPLAT_FORCE
     splat(pointer.texcoordX, pointer.texcoordY, dx, dy, pointer.color)
   }
 
-  function multipleSplats(amount) {
+  function multipleSplats(amount: number) {
     for (let i = 0; i < amount; i++) {
       const color = generateColor()
       color.r *= 10.0
@@ -871,7 +886,7 @@ export function fluidSim(el, configParam = {}) {
     }
   }
 
-  function splat(x, y, dx, dy, color) {
+  function splat(x: number, y: number, dx: number, dy: number, color: any) {
     gl.viewport(0, 0, velocity.width, velocity.height)
     splatProgram.bind()
     gl.uniform1i(splatProgram.uniforms.uTarget, velocity.read.attach(0))
@@ -889,7 +904,7 @@ export function fluidSim(el, configParam = {}) {
     dye.swap()
   }
 
-  function correctRadius(radius) {
+  function correctRadius(radius: number) {
     let aspectRatio = canvas.width / canvas.height
     if (aspectRatio > 1)
       radius *= aspectRatio
@@ -901,7 +916,7 @@ export function fluidSim(el, configParam = {}) {
     let posY = scaleByPixelRatio(e.offsetY)
     let pointer = pointers.find(p => p.id === -1)
     if (pointer == null)
-      pointer = new pointerPrototype()
+      pointer = new Pointer()
     updatePointerDownData(pointer, -1, posX, posY)
   })
 
@@ -921,7 +936,7 @@ export function fluidSim(el, configParam = {}) {
     e.preventDefault()
     const touches = e.targetTouches
     while (touches.length >= pointers.length)
-      pointers.push(new pointerPrototype())
+      pointers.push(new Pointer())
     for (let i = 0; i < touches.length; i++) {
       let posX = scaleByPixelRatio(touches[i].pageX)
       let posY = scaleByPixelRatio(touches[i].pageY)
@@ -943,7 +958,7 @@ export function fluidSim(el, configParam = {}) {
     const touches = e.changedTouches
     for (let i = 0; i < touches.length; i++) {
       let pointer = pointers.find(p => p.id === touches[i].identifier)
-      updatePointerUpData(pointer)
+      if (pointer) updatePointerUpData(pointer)
     }
   })
 
@@ -951,10 +966,10 @@ export function fluidSim(el, configParam = {}) {
     if (e.code === 'KeyP')
       config.PAUSED = !config.PAUSED
     if (e.key === ' ')
-      splatStack.push(parseInt(Math.random() * 20) + 5)
+      splatStack.push(Math.floor(Math.random() * 20) + 5)
   })
 
-  function updatePointerDownData(pointer, id, posX, posY) {
+  function updatePointerDownData(pointer: Pointer, id: number, posX: number, posY: number) {
     pointer.id = id
     pointer.down = true
     pointer.moved = false
@@ -967,7 +982,7 @@ export function fluidSim(el, configParam = {}) {
     pointer.color = generateColor()
   }
 
-  function updatePointerMoveData(pointer, posX, posY) {
+  function updatePointerMoveData(pointer: Pointer, posX: number, posY: number) {
     if (config.TRIGGER === 'click') {
       pointer.moved = pointer.down
     }
@@ -982,17 +997,17 @@ export function fluidSim(el, configParam = {}) {
     }
   }
 
-  function updatePointerUpData(pointer) {
+  function updatePointerUpData(pointer: Pointer) {
     pointer.down = false
   }
 
-  function correctDeltaX(delta) {
+  function correctDeltaX(delta: number) {
     let aspectRatio = canvas.width / canvas.height
     if (aspectRatio < 1) delta *= aspectRatio
     return delta
   }
 
-  function correctDeltaY(delta) {
+  function correctDeltaY(delta: number) {
     let aspectRatio = canvas.width / canvas.height
     if (aspectRatio > 1) delta /= aspectRatio
     return delta
@@ -1006,8 +1021,8 @@ export function fluidSim(el, configParam = {}) {
     return c
   }
 
-  function HSVtoRGB(h, s, v) {
-    let r, g, b, i, f, p, q, t
+  function HSVtoRGB(h: number, s: number, v: number) {
+    let r = 0, g = 0, b = 0, i, f, p, q, t
     i = Math.floor(h * 6)
     f = h * 6 - i
     p = v * (1 - s)
@@ -1035,7 +1050,7 @@ export function fluidSim(el, configParam = {}) {
     }
   }
 
-  function normalizeColor(input) {
+  function normalizeColor(input: any) {
     let output = {
       r: input.r / 255,
       g: input.g / 255,
@@ -1044,13 +1059,13 @@ export function fluidSim(el, configParam = {}) {
     return output
   }
 
-  function wrap(value, min, max) {
+  function wrap(value: number, min: number, max: number) {
     let range = max - min
     if (range === 0) return min
     return (value - min) % range + min
   }
 
-  function getResolution(resolution) {
+  function getResolution(resolution: number) {
     let aspectRatio = gl.drawingBufferWidth / gl.drawingBufferHeight
     if (aspectRatio < 1)
       aspectRatio = 1.0 / aspectRatio
@@ -1064,19 +1079,19 @@ export function fluidSim(el, configParam = {}) {
       return { width: min, height: max }
   }
 
-  function getTextureScale(texture, width, height) {
+  function getTextureScale(texture: any, width: number, height: number) {
     return {
       x: width / texture.width,
       y: height / texture.height
     }
   }
 
-  function scaleByPixelRatio(input) {
+  function scaleByPixelRatio(input: number) {
     let pixelRatio = window.devicePixelRatio || 1
     return Math.floor(input * pixelRatio)
   }
 
-  function hashCode(s) {
+  function hashCode(s: string) {
     if (s.length === 0) return 0
     let hash = 0
     for (let i = 0; i < s.length; i++) {
