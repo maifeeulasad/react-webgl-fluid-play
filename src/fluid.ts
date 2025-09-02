@@ -172,11 +172,16 @@ export function fluidSim(el: HTMLCanvasElement, configParam = {}) {
   const { gl, ext } = getWebGLContext(canvas)
   
   const isMobile = (): boolean => {
-    return /Mobi|Android/i.test(navigator.userAgent)
+    return /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
   }
 
   if (isMobile()) {
     config.DYE_RESOLUTION = 512
+    config.SIM_RESOLUTION = 512
+    config.BLOOM_ITERATIONS = 4 // Reduce bloom iterations for better performance
+    config.SUNRAYS_RESOLUTION = 128 // Reduce sunrays resolution
+    config.PRESSURE_ITERATIONS = 15 // Reduce pressure iterations for better performance
+    config.SPLAT_COUNT = Math.floor(Math.random() * 10) + 3 // Reduce initial splats
   }
   if (!ext.supportLinearFiltering) {
     config.DYE_RESOLUTION = 512
@@ -188,7 +193,14 @@ export function fluidSim(el: HTMLCanvasElement, configParam = {}) {
   // startGUI()
 
   function getWebGLContext(canvas: HTMLCanvasElement) {
-    const params: WebGLContextAttributes = { alpha: true, depth: false, stencil: false, antialias: false, preserveDrawingBuffer: false }
+    const params: WebGLContextAttributes = {
+      alpha: true,
+      depth: false,
+      stencil: false,
+      antialias: false,
+      preserveDrawingBuffer: false,
+      powerPreference: isMobile() ? 'low-power' : 'default' // Better battery life on mobile
+    }
 
     let gl: any = canvas.getContext('webgl2', params)
     const isWebGL2 = !!gl
@@ -196,7 +208,17 @@ export function fluidSim(el: HTMLCanvasElement, configParam = {}) {
       gl = canvas.getContext('webgl', params) || canvas.getContext('experimental-webgl', params)
 
     if (!gl) {
-      throw new Error('WebGL not supported')
+      throw new Error('WebGL not supported. Please update your browser or try on a different device.')
+    }
+
+    // Check for required WebGL extensions on mobile
+    if (isMobile()) {
+      const requiredExtensions = ['OES_texture_float', 'OES_texture_float_linear']
+      for (const ext of requiredExtensions) {
+        if (!gl.getExtension(ext)) {
+          console.warn(`WebGL extension ${ext} not available. Some features may be disabled.`)
+        }
+      }
     }
 
     let halfFloat: OES_texture_half_float | null
@@ -654,8 +676,14 @@ export function fluidSim(el: HTMLCanvasElement, configParam = {}) {
   let colorUpdateTimer = 0.0
   update()
 
+  let lastFrameTime = 0
+  const targetFPS = isMobile() ? 45 : 60 // Lower FPS target for mobile
+  const frameInterval = 1000 / targetFPS
+
   function update() {
+    const now = performance.now()
     const dt = calcDeltaTime()
+
     if (resizeCanvas())
       initFramebuffers()
     updateColors(dt)
@@ -663,7 +691,14 @@ export function fluidSim(el: HTMLCanvasElement, configParam = {}) {
     if (!config.PAUSED)
       step(dt)
     render(null)
-    requestAnimationFrame(update)
+
+    // Frame rate limiting for better mobile performance
+    if (isMobile() && now - lastFrameTime < frameInterval) {
+      setTimeout(() => requestAnimationFrame(update), frameInterval - (now - lastFrameTime))
+    } else {
+      lastFrameTime = now
+      requestAnimationFrame(update)
+    }
   }
 
   function calcDeltaTime() {
@@ -977,32 +1012,70 @@ export function fluidSim(el: HTMLCanvasElement, configParam = {}) {
   canvas.addEventListener('touchstart', e => {
     e.preventDefault()
     const touches = e.targetTouches
-    while (touches.length >= pointers.length)
-      pointers.push(new Pointer())
+    const rect = canvas.getBoundingClientRect()
+
+    // Clear old pointers that are no longer touching
+    pointers.forEach(p => {
+      const stillTouching = Array.from(touches).some(t => t.identifier === p.id)
+      if (!stillTouching && p.id !== -1) {
+        p.down = false
+      }
+    })
+
+    // Add new touch points
     for (let i = 0; i < touches.length; i++) {
-      let posX = scaleByPixelRatio(touches[i].pageX)
-      let posY = scaleByPixelRatio(touches[i].pageY)
-      updatePointerDownData(pointers[i + 1], touches[i].identifier, posX, posY)
+      const touch = touches[i]
+      let pointer = pointers.find(p => p.id === touch.identifier)
+
+      if (!pointer) {
+        pointer = new Pointer()
+        pointers.push(pointer)
+      }
+
+      // Use clientX/clientY for better mobile support
+      const posX = scaleByPixelRatio(touch.clientX - rect.left)
+      const posY = scaleByPixelRatio(touch.clientY - rect.top)
+
+      updatePointerDownData(pointer, touch.identifier, posX, posY)
     }
   })
 
   canvas.addEventListener('touchmove', e => {
     e.preventDefault()
     const touches = e.targetTouches
-    for (let i = 0; i < touches.length; i++) {
-      let posX = scaleByPixelRatio(touches[i].pageX)
-      let posY = scaleByPixelRatio(touches[i].pageY)
-      updatePointerMoveData(pointers[i + 1], posX, posY)
-    }
-  }, false)
+    const rect = canvas.getBoundingClientRect()
 
-  window.addEventListener('touchend', e => {
-    const touches = e.changedTouches
     for (let i = 0; i < touches.length; i++) {
-      let pointer = pointers.find(p => p.id === touches[i].identifier)
-      if (pointer) updatePointerUpData(pointer)
+      const touch = touches[i]
+      const pointer = pointers.find(p => p.id === touch.identifier)
+
+      if (pointer) {
+        // Use clientX/clientY for better mobile support
+        const posX = scaleByPixelRatio(touch.clientX - rect.left)
+        const posY = scaleByPixelRatio(touch.clientY - rect.top)
+
+        updatePointerMoveData(pointer, posX, posY)
+      }
     }
-  })
+  }, { passive: false })
+
+  canvas.addEventListener('touchend', e => {
+    e.preventDefault()
+    const touches = e.changedTouches
+
+    for (let i = 0; i < touches.length; i++) {
+      const touch = touches[i]
+      const pointer = pointers.find(p => p.id === touch.identifier)
+
+      if (pointer) {
+        updatePointerUpData(pointer)
+        // Reset pointer for reuse
+        pointer.id = -1
+        pointer.down = false
+        pointer.moved = false
+      }
+    }
+  }, { passive: false })
 
   window.addEventListener('keydown', e => {
     if (e.code === 'KeyP')
