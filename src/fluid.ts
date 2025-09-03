@@ -135,7 +135,7 @@ export function fluidSim(el: HTMLCanvasElement, configParam = {}) {
     SPLAT_COUNT: Math.floor(Math.random() * 20) + 5,
     SHADING: true,
     COLORFUL: true,
-    COLOR_UPDATE_SPEED: 5,
+    COLOR_UPDATE_SPEED: 3,
     PAUSED: false,
     BACK_COLOR: { r: 0, g: 0, b: 0 },
     TRANSPARENT: false,
