@@ -168,7 +168,7 @@ const PathManager: React.FC<PathManagerProps> = ({ onPathChange, canvasWidth, ca
       ...path,
       points: generatePathPoints(path.id),
     }));
-    
+
     // Update the predefined paths (you might want to store these differently)
     PREDEFINED_PATHS.forEach((path, index) => {
       path.points = pathsWithPoints[index].points;
@@ -185,10 +185,44 @@ const PathManager: React.FC<PathManagerProps> = ({ onPathChange, canvasWidth, ca
     onPathChange(null);
   };
 
+  const recordDragMove = (e: MouseEvent | TouchEvent) => {
+    const rect = (e.target as HTMLElement).getBoundingClientRect();
+    let clientX: number, clientY: number;
+
+    if (e instanceof TouchEvent) {
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    } else {
+      clientX = e.clientX;
+      clientY = e.clientY;
+    }
+
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
+
+    const normalizedX = x / rect.width;
+    const normalizedY = y / rect.height;
+    const timestamp = (Date.now() - recordingStartTime) / 1000; // seconds since recording started
+
+    setRecordingPoints(prev => [...prev, { x: normalizedX, y: normalizedY, timestamp }]);
+  };
+
+  useEffect(() => {
+    if (isRecording) {
+      console.log("recording---Points", recordingPoints);
+    } else {
+      console.log("stopped---Points", recordingPoints);
+    }
+  }, [isRecording, recordingPoints]);
+
   const startRecording = () => {
-    setIsRecording(true);
     setRecordingPoints([]);
     setRecordingStartTime(Date.now());
+
+    window.addEventListener('mousemove', recordDragMove as EventListener);
+    window.addEventListener('touchmove', recordDragMove as EventListener);
+
+    setIsRecording(true);
   };
 
   const stopRecording = () => {
@@ -204,6 +238,9 @@ const PathManager: React.FC<PathManagerProps> = ({ onPathChange, canvasWidth, ca
     }
     setIsRecording(false);
     setRecordingPoints([]);
+
+    window.removeEventListener('mousemove', recordDragMove as EventListener);
+    window.removeEventListener('touchmove', recordDragMove as EventListener);
   };
 
   const deleteCustomPath = (pathId: string) => {
