@@ -29,6 +29,9 @@ importers:
       '@types/react-dom':
         specifier: ^17.0.11
         version: 17.0.26(@types/react@17.0.88)
+      idb-ts:
+        specifier: ^3.3.0
+        version: 3.3.0(reflect-metadata@0.2.2)
       react:
         specifier: ^17.0.2
         version: 17.0.2
@@ -2981,6 +2984,11 @@ packages:
     peerDependencies:
       postcss: ^8.1.0
 
+  idb-ts@3.3.0:
+    resolution: {integrity: sha512-QLa1b76CPqrsO8LOx0bEPPeFhjjVZc2BgsOfeg2a7sDrQqn6EjD4NBe9rCu4LuipJGd/NXtyDHAuepc+2CP8LA==}
+    peerDependencies:
+      reflect-metadata: ^0.2.2
+
   idb@7.1.1:
     resolution: {integrity: sha512-gchesWBzyvGHRO9W8tzUWFDycow5gwjvFKfyV9FF32Y7F50yZMp7mP+T2mJIWFx49zicqyC4uefHM17o6xKIVQ==}
 
@@ -4542,6 +4550,9 @@ packages:
   redent@3.0.0:
     resolution: {integrity: sha512-6tDA8g98We0zd0GvVeMT9arEOnTw9qM03L9cJXaCjrip1OO764RDBLBfrB4cwzNGDj5OA5ioymC9GkizgWJDUg==}
     engines: {node: '>=8'}
+
+  reflect-metadata@0.2.2:
+    resolution: {integrity: sha512-urBwgfrvVP/eAyXx4hluJivBKzuEbSQs9rKWCrCkbSxNv8mxPcUZKeuoF3Uy4mJl3Lwprp6yy5/39VWigZ4K6Q==}
 
   reflect.getprototypeof@1.0.10:
     resolution: {integrity: sha512-00o4I+DVrefhv+nX0ulyi3biSHCPDe+yLv5o/p6d/UVlirijB8E16FtfwSAi4g3tcqrQ4lRAqQSoFEZJehYEcw==}
@@ -9184,6 +9195,10 @@ snapshots:
     dependencies:
       postcss: 8.5.6
 
+  idb-ts@3.3.0(reflect-metadata@0.2.2):
+    dependencies:
+      reflect-metadata: 0.2.2
+
   idb@7.1.1: {}
 
   identity-obj-proxy@3.0.0:
@@ -11060,6 +11075,8 @@ snapshots:
     dependencies:
       indent-string: 4.0.0
       strip-indent: 3.0.0
+
+  reflect-metadata@0.2.2: {}
 
   reflect.getprototypeof@1.0.10:
     dependencies:
