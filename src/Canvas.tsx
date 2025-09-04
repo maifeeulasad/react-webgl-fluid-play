@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { fluidSim } from "./fluid";
+import PathManager, { FluidPath } from "./PathManager";
+import { PathFollower } from "./PathFollower";
 
 interface ICanvasProps {
   height?: number;
@@ -22,6 +24,8 @@ const Canvas = ({ height: heightProps, width: widthProps }: ICanvasProps) => {
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const animationFrameRef = useRef<number>();
+  const pathFollowerRef = useRef<PathFollower>(new PathFollower());
+  const fluidControlRef = useRef<any>(null);
 
   // Detect mobile device
   useEffect(() => {
@@ -136,7 +140,8 @@ const Canvas = ({ height: heightProps, width: widthProps }: ICanvasProps) => {
       });
 
       // Initialize fluid simulation
-      fluidSim(canvas);
+      const fluidControl = fluidSim(canvas, {}, pathFollowerRef.current);
+      fluidControlRef.current = fluidControl;
 
       setIsLoading(false);
       console.log('Fluid simulation initialized successfully');
@@ -154,6 +159,13 @@ const Canvas = ({ height: heightProps, width: widthProps }: ICanvasProps) => {
       return () => clearTimeout(timer);
     }
   }, [isLoading, error, showWelcome]);
+
+  // Handle path changes
+  const handlePathChange = useCallback((path: FluidPath | null) => {
+    if (fluidControlRef.current) {
+      fluidControlRef.current.setPath(path);
+    }
+  }, []);
 
   // Prevent default touch behaviors that interfere with the simulation
   useEffect(() => {
@@ -205,6 +217,13 @@ const Canvas = ({ height: heightProps, width: widthProps }: ICanvasProps) => {
         WebkitUserSelect: "none", // Prevent selection on iOS
       }}
     >
+      {/* Path Manager */}
+      <PathManager 
+        onPathChange={handlePathChange}
+        canvasWidth={width}
+        canvasHeight={height}
+      />
+      
       {/* Header */}
       <div
         style={{
