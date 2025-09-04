@@ -207,14 +207,6 @@ const PathManager: React.FC<PathManagerProps> = ({ onPathChange, canvasWidth, ca
     setRecordingPoints(prev => [...prev, { x: normalizedX, y: normalizedY, timestamp }]);
   };
 
-  useEffect(() => {
-    if (isRecording) {
-      console.log("recording---Points", recordingPoints);
-    } else {
-      console.log("stopped---Points", recordingPoints);
-    }
-  }, [isRecording, recordingPoints]);
-
   const startRecording = () => {
     setRecordingPoints([]);
     setRecordingStartTime(Date.now());

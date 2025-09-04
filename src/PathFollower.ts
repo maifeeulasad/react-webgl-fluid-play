@@ -8,8 +8,6 @@ export class PathFollower {
   private completedLoops: number = 0;
   private maxLoops: number = -1; // -1 means infinite loops
 
-  constructor() {}
-
   public setPath(path: FluidPath | null): void {
     this.path = path;
     this.startTime = Date.now();
