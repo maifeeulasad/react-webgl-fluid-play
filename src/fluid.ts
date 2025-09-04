@@ -45,6 +45,8 @@ import {
   pressureShaderInstructions,
   gradientSubtractShaderInstructions,
 } from "./shaders"
+import { PathFollower } from "./PathFollower"
+import { FluidPath } from "./PathManager"
 
 interface Config {
   TRIGGER: string;
@@ -116,7 +118,7 @@ interface Uniforms {
   [key: string]: WebGLUniformLocation | null;
 }
 
-export function fluidSim(el: HTMLCanvasElement, configParam = {}) {
+export function fluidSim(el: HTMLCanvasElement, configParam = {}, pathFollower?: PathFollower) {
   const canvas = el
   resizeCanvas()
 
@@ -790,12 +792,31 @@ export function fluidSim(el: HTMLCanvasElement, configParam = {}) {
     if (splatStack.length > 0)
       multipleSplats(splatStack.pop() as number)
 
-    pointers.forEach(p => {
-      if (p.moved) {
-        p.moved = false
-        splatPointer(p)
+    // Handle path following if active
+    if (pathFollower && pathFollower.isFollowingPath()) {
+      const pathPosition = pathFollower.getCurrentPosition(canvas.width, canvas.height)
+      if (pathPosition) {
+        // Create a virtual pointer for path following
+        const pathPointer: Pointer = new Pointer()
+        pathPointer.texcoordX = pathPosition.x / canvas.width
+        pathPointer.texcoordY = 1.0 - pathPosition.y / canvas.height
+        pathPointer.deltaX = correctDeltaX(pathPosition.deltaX)
+        pathPointer.deltaY = correctDeltaY(pathPosition.deltaY)
+        pathPointer.down = true
+        pathPointer.moved = true
+        pathPointer.color = pathPosition.color || generateColor()
+        
+        splatPointer(pathPointer)
       }
-    })
+    } else {
+      // Normal pointer input handling when not following a path
+      pointers.forEach(p => {
+        if (p.moved) {
+          p.moved = false
+          splatPointer(p)
+        }
+      })
+    }
   }
 
   function step(dt: number) {
@@ -1268,5 +1289,21 @@ export function fluidSim(el: HTMLCanvasElement, configParam = {}) {
       hash |= 0 // Convert to 32bit integer
     }
     return hash
+  }
+
+  // Return an object with path control methods
+  return {
+    setPath: (path: FluidPath | null) => {
+      if (pathFollower) {
+        pathFollower.setPath(path)
+      }
+    },
+    getPathFollower: () => pathFollower,
+    isFollowingPath: () => pathFollower ? pathFollower.isFollowingPath() : false,
+    stopPath: () => {
+      if (pathFollower) {
+        pathFollower.stop()
+      }
+    }
   }
 }
