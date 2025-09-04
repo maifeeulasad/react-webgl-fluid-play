@@ -24,8 +24,8 @@ interface PathManagerProps {
 // Predefined path templates
 const PREDEFINED_PATHS: FluidPath[] = [
   {
-    id: 'circle',
-    name: 'Circle',
+    id: 'oval',
+    name: 'Oval',
     points: [],
     duration: 5,
     loop: true,
@@ -83,27 +83,27 @@ const PathManager: React.FC<PathManagerProps> = ({ onPathChange, canvasWidth, ca
     const radiusY = 0.3;
 
     switch (pathId) {
-      case 'circle':
-        const circlePoints: PathPoint[] = [];
+      case 'oval':
+        const ovalPoints: PathPoint[] = [];
         for (let i = 0; i <= 64; i++) {
           const angle = (i / 64) * Math.PI * 2;
-          circlePoints.push({
+          ovalPoints.push({
             x: centerX + Math.cos(angle) * radiusX,
             y: centerY + Math.sin(angle) * radiusY,
           });
         }
-        return circlePoints;
+        return ovalPoints;
 
-      case 'figure8':
-        const figure8Points: PathPoint[] = [];
+      case 'infinity':
+        const infinityPoints: PathPoint[] = [];
         for (let i = 0; i <= 128; i++) {
           const t = (i / 128) * Math.PI * 2;
-          figure8Points.push({
+          infinityPoints.push({
             x: centerX + Math.sin(t) * radiusX,
             y: centerY + Math.sin(t) * Math.cos(t) * radiusY,
           });
         }
-        return figure8Points;
+        return infinityPoints;
 
       case 'spiral':
         const spiralPoints: PathPoint[] = [];
