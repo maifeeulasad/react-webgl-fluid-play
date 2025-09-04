@@ -1,3 +1,7 @@
+/*
+Copyright (c) (2022 - infinity) Maifee Ul Asad
+*/
+
 import { FluidPath, PathPoint } from './PathManager';
 
 export class PathFollower {

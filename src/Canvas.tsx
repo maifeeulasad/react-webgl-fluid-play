@@ -1,3 +1,7 @@
+/*
+Copyright (c) (2022 - infinity) Maifee Ul Asad
+*/
+
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { fluidSim } from "./fluid";
 import PathManager, { FluidPath } from "./PathManager";

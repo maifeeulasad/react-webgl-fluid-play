@@ -1,3 +1,7 @@
+/*
+Copyright (c) (2022 - infinity) Maifee Ul Asad
+*/
+
 import React, { useState, useEffect } from 'react';
 
 export interface PathPoint {

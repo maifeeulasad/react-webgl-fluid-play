@@ -1,4 +1,8 @@
 /*
+Copyright (c) (2022 - infinity) Maifee Ul Asad
+*/
+
+/*
 MIT License
 
 Copyright (c) 2017 Pavel Dobryakov

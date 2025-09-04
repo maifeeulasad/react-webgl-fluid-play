@@ -1,3 +1,7 @@
+/*
+Copyright (c) (2022 - infinity) Maifee Ul Asad
+*/
+
 const baseVertexShaderInstructions = `
 precision highp float;
 attribute vec2 aPosition;

@@ -1,3 +1,7 @@
+/*
+Copyright (c) (2022 - infinity) Maifee Ul Asad
+*/
+
 import React from 'react';
 import ReactDOM from 'react-dom';
 import Canvas from './Canvas';
