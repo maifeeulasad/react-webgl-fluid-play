@@ -1,3 +1,5 @@
 # react-webgl-fluid-play
 
-Based on: https://github.com/PavelDoGreat/WebGL-Fluid-Simulation
+NPM: https://www.npmjs.com/package/react-webgl-fluid-play
+
+Demo: https://maifeeulasad.github.io/react-webgl-fluid-play/
