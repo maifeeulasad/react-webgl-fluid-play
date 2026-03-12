@@ -2,7 +2,7 @@
 Copyright (c) (2022 - infinity) Maifee Ul Asad
 */
 
-import { FluidPath, PathPoint } from './PathManager';
+import { FluidPath, PathPoint } from './paths';
 
 export class PathFollower {
   private path: FluidPath | null = null;
