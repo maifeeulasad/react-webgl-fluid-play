@@ -1,7 +1,7 @@
 # react-webgl-fluid-play
 
 [![npm version](https://img.shields.io/npm/v/react-webgl-fluid-play?style=flat-square&logo=npm&color=cb0000)](https://www.npmjs.com/package/react-webgl-fluid-play)
-[![npm downloads](https://img.shields.io/npm/dm/react-webgl-fluid-play?style=flat-square&logo=npm&color=cb0000)](https://www.npmjs.com/package/react-webgl-fluid-play)
+[![npm downloads](https://img.shields.io/npm/dy/react-webgl-fluid-play?style=flat-square&logo=npm&color=cb0000)](https://www.npmjs.com/package/react-webgl-fluid-play)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](./LICENSE)
 [![React peer dep](https://img.shields.io/badge/react-%5E17.0-61dafb?style=flat-square&logo=react&logoColor=61dafb&labelColor=20232a)](https://reactjs.org)
 [![Demo](https://img.shields.io/badge/demo-live-brightgreen?style=flat-square&logo=github)](https://maifeeulasad.github.io/react-webgl-fluid-play/)
