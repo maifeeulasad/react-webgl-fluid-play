@@ -12,11 +12,9 @@
   },
   "files": [
     "src/",
-    "public/",
     "README.md",
     "LICENSE",
-    "package.json",
-    "tsconfig.json"
+    "package.json"
   ],
   "author": "Maifee Ul Asad <maifeeulasad@gmail.com>",
   "repository": {
