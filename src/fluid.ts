@@ -50,7 +50,7 @@ import {
   gradientSubtractShaderInstructions,
 } from "./shaders"
 import { PathFollower } from "./PathFollower"
-import { FluidPath } from "./PathManager"
+import { FluidPath } from "./paths"
 
 interface Config {
   TRIGGER: string;
