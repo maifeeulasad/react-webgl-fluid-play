@@ -2,12 +2,13 @@
   "name": "react-webgl-fluid-play",
   "version": "0.4.0",
   "private": false,
-  "main": "src/library.ts",
-  "types": "src/library.ts",
+  "main": "dist/library.js",
+  "types": "dist/library.d.ts",
   "exports": {
     ".": {
-      "types": "./src/library.ts",
-      "default": "./src/library.ts"
+      "types": "./dist/library.d.ts",
+      "require": "./dist/library.js",
+      "default": "./dist/library.js"
     }
   },
   "files": [
