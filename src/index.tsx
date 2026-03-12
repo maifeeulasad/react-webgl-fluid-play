@@ -2,14 +2,47 @@
 Copyright (c) (2022 - infinity) Maifee Ul Asad
 */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom';
-import Canvas from './Canvas';
+import Canvas, { CanvasRef } from './Canvas';
+import { FluidPath } from './paths';
 
 const isMobile = /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
 const App = () => {
   const [showWelcome, setShowWelcome] = useState(true);
+  const canvasRef = useRef<CanvasRef>(null);
+
+  const playInfinity = () => {
+    canvasRef.current?.playPredefinedPath('infinity');
+  };
+
+  const playHeartOnce = () => {
+    canvasRef.current?.playPredefinedPath('heart', { maxLoops: 1 });
+  };
+
+  const playCustomPath = () => {
+    const customPath: FluidPath = {
+      id: 'demo-custom-zigzag',
+      name: 'Demo Zigzag',
+      duration: 5,
+      loop: true,
+      points: [
+        { x: 0.1, y: 0.2 },
+        { x: 0.9, y: 0.25 },
+        { x: 0.2, y: 0.5 },
+        { x: 0.85, y: 0.75 },
+        { x: 0.15, y: 0.85 },
+        { x: 0.1, y: 0.2 },
+      ],
+    };
+
+    canvasRef.current?.playPath(customPath, { maxLoops: 2 });
+  };
+
+  const stopPath = () => {
+    canvasRef.current?.stopPath();
+  };
 
   useEffect(() => {
     if (!showWelcome) return;
@@ -86,12 +119,33 @@ const App = () => {
         </div>
       )}
 
+      <div
+        style={{
+          position: 'absolute',
+          top: isMobile ? '95px' : '75px',
+          left: '12px',
+          zIndex: 1100,
+          display: 'flex',
+          gap: '8px',
+          flexWrap: 'wrap',
+        }}
+      >
+        <button onClick={playInfinity}>Play Infinity</button>
+        <button onClick={playHeartOnce}>Play Heart Once</button>
+        <button onClick={playCustomPath}>Play Custom Path</button>
+        <button onClick={stopPath}>Stop Path</button>
+      </div>
+
       {/*
         ── Canvas ──
         showPathManager enables the built-in path-selector button/panel.
         Remove the prop (or set it to false) to get a completely bare canvas.
       */}
-      <Canvas showPathManager />
+      <Canvas
+        ref={canvasRef}
+        showPathManager
+        initialAnimation={{ path: 'oval', options: { maxLoops: 1 } }}
+      />
 
     </div>
   );
