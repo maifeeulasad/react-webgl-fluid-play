@@ -26,7 +26,7 @@
   "bugs": {
     "url": "https://github.com/maifeeulasad/react-webgl-fluid-play/issues"
   },
-  "homepage": "./",
+  "homepage": "https://github.com/maifeeulasad/react-webgl-fluid-play/",
   "peerDependencies": {
     "react": "^17.0.2",
     "react-dom": "^17.0.2"
