@@ -366,9 +366,6 @@ export function fluidSim(el: HTMLCanvasElement, configParam = {}, pathFollower?:
     constructor(vertexShader: WebGLShader, fragmentShaderSource: string) {
       this.vertexShader = vertexShader
       this.fragmentShaderSource = fragmentShaderSource
-      this.programs = {}
-      this.activeProgram = null
-      this.uniforms = {}
     }
 
     setKeywords(keywords: string[]) {
@@ -716,7 +713,7 @@ export function fluidSim(el: HTMLCanvasElement, configParam = {}, pathFollower?:
       gl.bindTexture(gl.TEXTURE_2D, texture)
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, image)
     }
-    url && (image.src = url)
+    if (url) { image.src = url; }
 
     return obj
   }
@@ -731,7 +728,7 @@ export function fluidSim(el: HTMLCanvasElement, configParam = {}, pathFollower?:
 
   updateKeywords()
   initFramebuffers()
-  config.IMMEDIATE && multipleSplats(config.SPLAT_COUNT)
+  if (config.IMMEDIATE) { multipleSplats(config.SPLAT_COUNT); }
 
   let lastUpdateTime = Date.now()
   let colorUpdateTimer = 0.0
