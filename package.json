@@ -3,13 +3,15 @@
   "version": "0.5.1",
   "private": false,
   "packageManager": "pnpm@10.16.1",
-  "main": "dist/library.js",
-  "types": "dist/library.d.ts",
+  "main": "dist/cjs/library.js",
+  "module": "dist/esm/library.js",
+  "types": "dist/types/library.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/library.d.ts",
-      "require": "./dist/library.js",
-      "default": "./dist/library.js"
+      "types": "./dist/types/library.d.ts",
+      "import": "./dist/esm/library.js",
+      "require": "./dist/cjs/library.js",
+      "default": "./dist/esm/library.js"
     }
   },
   "files": [
