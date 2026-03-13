@@ -36,6 +36,9 @@
     "Maifee Ul Asad <maifeeulasad@gmail.com> (https://github.com/maifeeulasad)"
   ],
   "sideEffects": false,
+  "directories": {
+    "lib": "dist"
+  },
   "keywords": [
     "react",
     "webgl",
