@@ -49,7 +49,7 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "build:lib": "rm -rf dist && tsc -p tsconfig.build.json",
+    "build:lib": "tsx ./scripts/build-lib.ts",
     "prepublishOnly": "pnpm build:lib",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
