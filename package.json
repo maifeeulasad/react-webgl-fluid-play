@@ -32,6 +32,9 @@
   },
   "homepage": "https://maifeeulasad.github.io/react-webgl-fluid-play/",
   "funding": "https://github.com/maifeeulasad",
+  "contributors": [
+    "Maifee Ul Asad <maifeeulasad@gmail.com> (https://github.com/maifeeulasad)"
+  ],
   "keywords": [
     "react",
     "webgl",
