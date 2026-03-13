@@ -4,7 +4,8 @@
         "noEmit": false,
         "declaration": false,
         "rootDir": "src",
-        "sourceMap": false
+        "sourceMap": false,
+        "jsx": "react"
     },
     "exclude": [
         "src/index.tsx"
