@@ -3,9 +3,10 @@ Copyright (c) (2022 - infinity) Maifee Ul Asad
 */
 
 import React, { useState, useEffect, useRef } from 'react';
-import ReactDOM from 'react-dom';
-import Canvas, { CanvasRef } from './Canvas';
-import { FluidPath } from './paths';
+import { render } from 'react-dom';
+
+import Canvas, { type CanvasRef } from './Canvas';
+import { type FluidPath } from './paths';
 
 const isMobile = /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
@@ -44,8 +45,19 @@ const App = () => {
     canvasRef.current?.stopPath();
   };
 
+  const closeWelcome = () => {
+    setShowWelcome(false);
+  };
+
+  const handleWelcomeKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      closeWelcome();
+    }
+  };
+
   useEffect(() => {
-    if (!showWelcome) return;
+    if (!showWelcome) {return;}
     const timer = setTimeout(() => setShowWelcome(false), 5000);
     return () => clearTimeout(timer);
   }, [showWelcome]);
@@ -88,7 +100,7 @@ const App = () => {
               rel="noopener noreferrer"
               style={{ color: '#4fc3f7' }}
             >
-              PavelDoGreat's WebGL-Fluid-Simulation
+              PavelDoGreat&apos;s WebGL-Fluid-Simulation
             </a>
           </p>
         </div>
@@ -105,7 +117,11 @@ const App = () => {
             backdropFilter: 'blur(5px)',
             cursor: 'pointer',
           }}
-          onClick={() => setShowWelcome(false)}
+          onClick={closeWelcome}
+          onKeyDown={handleWelcomeKeyDown}
+          role="button"
+          tabIndex={0}
+          aria-label="Dismiss welcome overlay"
         >
           <div style={{ textAlign: 'center', color: '#fff' }}>
             <h1 style={{ fontSize: isMobile ? '2rem' : '3rem', margin: 0, fontWeight: 'bold' }}>
@@ -151,7 +167,7 @@ const App = () => {
   );
 };
 
-ReactDOM.render(
+render(
   <React.StrictMode>
     <App />
   </React.StrictMode>,

@@ -3,7 +3,8 @@ Copyright (c) (2022 - infinity) Maifee Ul Asad
 */
 
 import React, { useMemo, useState } from 'react';
-import { FluidPath, PathPoint, getPredefinedPaths } from './paths';
+
+import { type FluidPath, type PathPoint, getPredefinedPaths } from './paths';
 
 interface PathManagerProps {
   onPathChange: (path: FluidPath | null) => void;
@@ -133,7 +134,7 @@ const PathManager: React.FC<PathManagerProps> = ({ onPathChange }) => {
           <div style={{ marginBottom: '15px', padding: '10px', background: 'rgba(255, 255, 255, 0.1)', borderRadius: '6px' }}>
             <strong>Status: </strong>
             {selectedPath ? (
-              <span style={{ color: '#4fc3f7' }}>Following "{selectedPath.name}"</span>
+              <span style={{ color: '#4fc3f7' }}>{`Following "${selectedPath.name}"`}</span>
             ) : isRecording ? (
               <span style={{ color: '#f44336' }}>Recording path...</span>
             ) : (

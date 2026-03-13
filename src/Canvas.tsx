@@ -10,15 +10,16 @@ import React, {
   useRef,
   useState,
 } from "react";
+
 import { fluidSim } from "./fluid";
-import PathManager from "./PathManager";
 import { PathFollower } from "./PathFollower";
+import PathManager from "./PathManager";
 import {
   cloneFluidPath,
   createPredefinedPath,
-  FluidPath,
-  FluidPathOverrides,
-  PredefinedPathId,
+  type FluidPath,
+  type FluidPathOverrides,
+  type PredefinedPathId,
 } from "./paths";
 
 interface FluidControl {
@@ -92,7 +93,7 @@ const Canvas = forwardRef<CanvasRef, CanvasProps>(
     const [height, setHeight] = useState<number>(0);
     const [width, setWidth] = useState<number>(0);
     const [isMobile] = useState<boolean>(() => {
-      if (typeof navigator === "undefined") return false;
+      if (typeof navigator === "undefined") {return false;}
       return /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     });
     const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -232,7 +233,7 @@ const Canvas = forwardRef<CanvasRef, CanvasProps>(
     // Initialize fluid simulation
     useEffect(() => {
       const canvas = canvasRef.current;
-      if (!canvas || width === 0 || height === 0) return;
+      if (!canvas || width === 0 || height === 0) {return;}
 
       if (canvas.width !== width || canvas.height !== height) {
         canvas.width = width;
@@ -294,7 +295,7 @@ const Canvas = forwardRef<CanvasRef, CanvasProps>(
     // Prevent default touch behaviors that interfere with the simulation
     useEffect(() => {
       const canvas = canvasRef.current;
-      if (!canvas) return;
+      if (!canvas) {return;}
 
       const preventDefault = (e: TouchEvent) => {
         e.preventDefault();

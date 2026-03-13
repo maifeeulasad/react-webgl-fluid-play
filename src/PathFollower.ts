@@ -2,15 +2,15 @@
 Copyright (c) (2022 - infinity) Maifee Ul Asad
 */
 
-import { FluidPath, PathPoint } from './paths';
+import { type FluidPath, type PathPoint } from './paths';
 
 export class PathFollower {
   private path: FluidPath | null = null;
-  private startTime: number = 0;
-  private isActive: boolean = false;
-  private currentPointIndex: number = 0;
-  private completedLoops: number = 0;
-  private maxLoops: number = -1; // -1 means infinite loops
+  private startTime = 0;
+  private isActive = false;
+  private currentPointIndex = 0;
+  private completedLoops = 0;
+  private maxLoops = -1; // -1 means infinite loops
 
   public setPath(path: FluidPath | null): void {
     this.path = path;
@@ -190,7 +190,7 @@ export class PathFollower {
   }
 
   // Method to simplify recorded paths (reduce number of points while maintaining shape)
-  public static simplifyPath(path: FluidPath, tolerance: number = 0.01): FluidPath {
+  public static simplifyPath(path: FluidPath, tolerance = 0.01): FluidPath {
     if (path.points.length <= 2) {
       return path;
     }
