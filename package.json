@@ -3,6 +3,7 @@
   "version": "0.7.0",
   "description": "Fluid simulation in React with webgl, pure typescript, no dependencies",
   "private": false,
+  "license": "MIT",
   "packageManager": "pnpm@10.16.1",
   "main": "dist/cjs/library.js",
   "module": "dist/esm/library.js",
