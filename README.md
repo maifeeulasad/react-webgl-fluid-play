@@ -1,5 +1,7 @@
 # react-webgl-fluid-play
 
+Fluid simulation in React with WebGL, pure TypeScript, and zero runtime dependencies.
+
 [![npm version](https://img.shields.io/npm/v/react-webgl-fluid-play?style=flat-square&logo=npm&color=cb0000)](https://www.npmjs.com/package/react-webgl-fluid-play)
 [![npm downloads](https://img.shields.io/npm/dy/react-webgl-fluid-play?style=flat-square&logo=npm&color=cb0000)](https://www.npmjs.com/package/react-webgl-fluid-play)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](./LICENSE)
@@ -21,7 +23,7 @@ yarn add react-webgl-fluid-play
 pnpm add react-webgl-fluid-play
 ```
 
-Requires **React 17+** as a peer dependency.
+Requires **React 17+** and **ReactDOM 17+** as peer dependencies.
 
 ---
 
@@ -50,19 +52,32 @@ import Canvas, {
   PathFollower,
   PREDEFINED_PATHS,
   PREDEFINED_PATH_IDS,
+  cloneFluidPath,
   createPredefinedPath,
+  getPredefinedPath,
   getPredefinedPaths,
+  isPredefinedPathId,
+  type CanvasAnimationOptions,
+  type CanvasInitialAnimation,
+  type CanvasProps,
   type CanvasRef,
   type FluidPath,
+  type FluidPathOverrides,
+  type PathColor,
+  type PathPoint,
   type PredefinedPathId,
 } from 'react-webgl-fluid-play';
 ```
 
 - `Canvas` default export (and named export)
 - `PathFollower` class export
-- predefined path exports: `PREDEFINED_PATHS`, `PREDEFINED_PATH_IDS`, `createPredefinedPath`, `getPredefinedPaths`, `getPredefinedPath`
-- path/type exports: `FluidPath`, `PathPoint`, `PathColor`, `PredefinedPathId`
+- predefined path exports: `PREDEFINED_PATHS`, `PREDEFINED_PATH_IDS`, `createPredefinedPath`, `getPredefinedPath`, `getPredefinedPaths`, `isPredefinedPathId`, `cloneFluidPath`
+- path/type exports: `FluidPath`, `FluidPathOverrides`, `PathPoint`, `PathColor`, `PredefinedPathId`
 - canvas API types: `CanvasRef`, `CanvasProps`, `CanvasAnimationOptions`, `CanvasInitialAnimation`
+
+### Predefined path ids
+
+`oval`, `infinity`, `spiral`, `wave`, `star`, `heart`
 
 ---
 
@@ -84,6 +99,14 @@ import Canvas, {
 `CanvasAnimationOptions`
 - `maxLoops?: number` (`-1` or omitted = infinite)
 - `predefinedOverrides?: FluidPathOverrides` (used when path is a predefined id)
+
+`CanvasRef`
+- `playPath(path, options?)`
+- `playPredefinedPath(pathId, options?)`
+- `stopPath()`
+- `clearPath()` (alias of `stopPath()`)
+- `isPlayingPath()`
+- `getCurrentPath()`
 
 ---
 
