@@ -209,6 +209,26 @@ export default function App() {
 
 ---
 
+## Development scripts
+
+- `pnpm start` - run the demo app in development mode.
+- `pnpm build` - build the demo app (`react-scripts build`).
+- `pnpm build:lib` - build library artifacts to `dist/` (CJS, ESM, and `.d.ts`).
+- `pnpm lint` - lint `src/` and `scripts/` with ESLint.
+- `pnpm lint:fix` - lint with auto-fixes.
+- `pnpm test` - run tests (`react-scripts test`).
+- `pnpm prepublishOnly` - build library artifacts before publishing.
+
+---
+
+## Package metadata
+
+- **Module formats**: ships both CommonJS (`main`) and ESM (`module`) builds.
+- **Type declarations**: includes bundled TypeScript definitions (`types`).
+- **Tree-shaking**: no side effects, so bundlers can safely drop unused imports.
+
+---
+
 ## License
 
 [MIT](./LICENSE) © Maifee Ul Asad
