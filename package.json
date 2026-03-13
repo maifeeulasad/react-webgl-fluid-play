@@ -39,6 +39,9 @@
   "directories": {
     "lib": "dist"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "keywords": [
     "react",
     "webgl",
