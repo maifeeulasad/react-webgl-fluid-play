@@ -91,7 +91,6 @@
     "lint": "eslint \"{src,scripts}/**/*.{ts,tsx}\" --cache --cache-location .eslintcache --max-warnings=0",
     "lint:fix": "pnpm lint --fix",
     "prepublishOnly": "pnpm build:lib",
-    "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
   "browserslist": {
