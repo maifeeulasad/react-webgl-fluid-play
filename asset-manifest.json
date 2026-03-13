@@ -1,10 +1,10 @@
 {
   "files": {
-    "main.js": "/react-webgl-fluid-play/static/js/main.e94b3815.js",
+    "main.js": "/react-webgl-fluid-play/static/js/main.dbe15336.js",
     "index.html": "/react-webgl-fluid-play/index.html",
-    "main.e94b3815.js.map": "/react-webgl-fluid-play/static/js/main.e94b3815.js.map"
+    "main.dbe15336.js.map": "/react-webgl-fluid-play/static/js/main.dbe15336.js.map"
   },
   "entrypoints": [
-    "static/js/main.e94b3815.js"
+    "static/js/main.dbe15336.js"
   ]
 }
