@@ -20,7 +20,7 @@
   "author": "Maifee Ul Asad <maifeeulasad@gmail.com>",
   "repository": {
     "type": "git",
-    "url": "https://github.com/maifeeulasad/react-webgl-fluid-play.git"
+    "url": "git+https://github.com/maifeeulasad/react-webgl-fluid-play.git"
   },
   "bugs": {
     "url": "https://github.com/maifeeulasad/react-webgl-fluid-play/issues"
