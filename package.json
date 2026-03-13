@@ -85,7 +85,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build",
+    "build": "DISABLE_ESLINT_PLUGIN=true react-scripts build",
     "build:lib": "tsx ./scripts/build-lib.ts",
     "lint": "eslint \"{src,scripts}/**/*.{ts,tsx}\" --cache --cache-location .eslintcache --max-warnings=0",
     "lint:fix": "pnpm lint --fix",
