@@ -366,6 +366,9 @@ export function fluidSim(el: HTMLCanvasElement, configParam = {}, pathFollower?:
     constructor(vertexShader: WebGLShader, fragmentShaderSource: string) {
       this.vertexShader = vertexShader
       this.fragmentShaderSource = fragmentShaderSource
+      this.programs = {}
+      this.activeProgram = null
+      this.uniforms = {}
     }
 
     setKeywords(keywords: string[]) {
