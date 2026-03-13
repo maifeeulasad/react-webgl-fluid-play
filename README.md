@@ -216,7 +216,6 @@ export default function App() {
 - `pnpm build:lib` - build library artifacts to `dist/` (CJS, ESM, and `.d.ts`).
 - `pnpm lint` - lint `src/` and `scripts/` with ESLint.
 - `pnpm lint:fix` - lint with auto-fixes.
-- `pnpm test` - run tests (`react-scripts test`).
 - `pnpm prepublishOnly` - build library artifacts before publishing.
 
 ---
