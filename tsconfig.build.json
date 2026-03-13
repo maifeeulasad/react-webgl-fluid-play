@@ -9,6 +9,9 @@
         "module": "commonjs",
         "sourceMap": false
     },
+    "exclude": [
+        "src/index.tsx"
+    ],
     "include": [
         "src/*.ts",
         "src/**.tsx",
