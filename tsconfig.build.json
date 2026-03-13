@@ -2,11 +2,8 @@
     "extends": "./tsconfig.json",
     "compilerOptions": {
         "noEmit": false,
-        "declaration": true,
-        "declarationMap": false,
-        "outDir": "dist",
+        "declaration": false,
         "rootDir": "src",
-        "module": "commonjs",
         "sourceMap": false
     },
     "exclude": [
