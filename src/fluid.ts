@@ -122,7 +122,7 @@ interface Uniforms {
   [key: string]: WebGLUniformLocation | null;
 }
 
-export function fluidSim(el: HTMLCanvasElement, configParam = {}, pathFollower?: PathFollower) {
+export function fluidSim(el: HTMLCanvasElement, configParam : Partial<Config>, pathFollower?: PathFollower) {
   const canvas = el
   resizeCanvas()
 
