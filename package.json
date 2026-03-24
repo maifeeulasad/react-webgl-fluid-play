@@ -1,6 +1,6 @@
 {
   "name": "react-webgl-fluid-play",
-  "version": "0.7.3",
+  "version": "0.8.0",
   "description": "Fluid simulation in React with webgl, pure typescript, no dependencies",
   "private": false,
   "license": "MIT",
