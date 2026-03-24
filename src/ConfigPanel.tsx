@@ -3,6 +3,7 @@ Copyright (c) (2022 - infinity) Maifee Ul Asad
 */
 
 import React, { useCallback, useState } from "react";
+
 import type { FluidConfig } from "./fluid";
 
 interface ConfigPanelProps {
@@ -27,13 +28,6 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onConfigChange }) => 
     [config, onConfigChange]
   );
 
-  const handleSelectChange = useCallback(
-    (key: keyof FluidConfig, value: string) => {
-      onConfigChange(key, value);
-    },
-    [onConfigChange]
-  );
-
   const handleColorChange = useCallback(
     (key: keyof FluidConfig, value: string) => {
       const rgb = value.slice(1).match(/.{1,2}/g);
@@ -46,7 +40,9 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onConfigChange }) => 
   );
 
   const colorToHex = (color: any): string => {
-    if (!color || typeof color !== "object") return "#000000";
+    if (!color || typeof color !== "object") {
+      return "#000000";
+    }
     const r = String(color.r).padStart(2, "0");
     const g = String(color.g).padStart(2, "0");
     const b = String(color.b).padStart(2, "0");
@@ -127,16 +123,6 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onConfigChange }) => 
     marginRight: "8px",
   };
 
-  const selectStyle: React.CSSProperties = {
-    width: "100%",
-    padding: "4px",
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
-    border: "1px solid rgba(255, 255, 255, 0.2)",
-    borderRadius: "4px",
-    color: "#fff",
-    fontSize: "11px",
-  };
-
   const colorInputStyle: React.CSSProperties = {
     width: "40px",
     height: "24px",
@@ -175,7 +161,18 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onConfigChange }) => 
 
   return (
     <div style={panelStyle}>
-      <div style={headerStyle} onClick={() => setIsExpanded(false)}>
+      <div
+        style={headerStyle}
+        onClick={() => setIsExpanded(false)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            setIsExpanded(false);
+          }
+        }}
+        role="button"
+        tabIndex={0}
+      >
         <span style={titleStyle}>⚙️ Fluid Config</span>
         <span style={{ cursor: "pointer", fontSize: "14px" }}>−</span>
       </div>
