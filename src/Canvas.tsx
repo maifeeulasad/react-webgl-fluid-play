@@ -11,10 +11,10 @@ import React, {
   useState,
 } from "react";
 
+import ConfigPanel from "./ConfigPanel";
 import { fluidSim, type FluidConfig } from "./fluid";
 import { PathFollower } from "./PathFollower";
 import PathManager from "./PathManager";
-import ConfigPanel from "./ConfigPanel";
 import {
   cloneFluidPath,
   createPredefinedPath,
