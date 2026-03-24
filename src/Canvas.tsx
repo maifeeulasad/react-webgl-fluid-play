@@ -11,9 +11,10 @@ import React, {
   useState,
 } from "react";
 
-import { fluidSim } from "./fluid";
+import { fluidSim, type FluidConfig } from "./fluid";
 import { PathFollower } from "./PathFollower";
 import PathManager from "./PathManager";
+import ConfigPanel from "./ConfigPanel";
 import {
   cloneFluidPath,
   createPredefinedPath,
@@ -27,6 +28,8 @@ interface FluidControl {
   getPathFollower: () => PathFollower | undefined;
   isFollowingPath: () => boolean;
   stopPath: () => void;
+  updateConfig: (key: keyof FluidConfig, value: any) => void;
+  getConfig: () => Partial<FluidConfig>;
 }
 
 interface PendingAnimation {
@@ -66,6 +69,8 @@ export interface CanvasProps {
   onError?: (error: string) => void;
   /** Whether to render the built-in PathManager UI. Defaults to false. */
   showPathManager?: boolean;
+  /** Whether to render the built-in ConfigPanel UI. Defaults to false. */
+  showConfigPanel?: boolean;
   /** Optional animation that should start when the simulation is ready. */
   initialAnimation?: CanvasInitialAnimation;
   /** Custom loading indicator. Defaults to a simple spinner. */
@@ -84,6 +89,7 @@ const Canvas = forwardRef<CanvasRef, CanvasProps>(
       onLoad,
       onError,
       showPathManager = false,
+      showConfigPanel = false,
       initialAnimation,
       loadingFallback,
       errorFallback,
@@ -99,6 +105,7 @@ const Canvas = forwardRef<CanvasRef, CanvasProps>(
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const [retrySeed, setRetrySeed] = useState(0);
+    const [fluidConfig, setFluidConfig] = useState<Partial<FluidConfig>>({});
 
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const animationFrameRef = useRef<number | null>(null);
@@ -254,6 +261,7 @@ const Canvas = forwardRef<CanvasRef, CanvasProps>(
 
         const fluidControl = fluidSim(canvas, {}, pathFollowerRef.current) as FluidControl;
         fluidControlRef.current = fluidControl;
+        setFluidConfig(fluidControl.getConfig());
 
         setIsLoading(false);
         onLoad?.();
@@ -290,6 +298,20 @@ const Canvas = forwardRef<CanvasRef, CanvasProps>(
         playAnimation(path);
       },
       [playAnimation]
+    );
+
+    const handleConfigChange = useCallback(
+      (key: keyof FluidConfig, value: any) => {
+        const fluidControl = fluidControlRef.current;
+        if (fluidControl) {
+          fluidControl.updateConfig(key, value);
+          setFluidConfig((prev) => ({
+            ...prev,
+            [key]: value,
+          }));
+        }
+      },
+      []
     );
 
     // Prevent default touch behaviors that interfere with the simulation
@@ -402,6 +424,10 @@ const Canvas = forwardRef<CanvasRef, CanvasProps>(
       >
         {showPathManager && (
           <PathManager onPathChange={handlePathChange} />
+        )}
+
+        {showConfigPanel && (
+          <ConfigPanel config={fluidConfig} onConfigChange={handleConfigChange} />
         )}
 
         {error && !isLoading &&
