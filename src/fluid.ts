@@ -83,6 +83,8 @@ interface Config {
   IMMEDIATE?: boolean;
 }
 
+export type FluidConfig = Config;
+
 type WebGLTextureFormat = { internalFormat: number; format: number; }
 
 interface FBO {
@@ -1308,6 +1310,20 @@ export function fluidSim(el: HTMLCanvasElement, configParam : Partial<Config>, p
       if (pathFollower) {
         pathFollower.stop()
       }
-    }
+    },
+    updateConfig: (key: keyof Config, value: any) => {
+      // Update the config value
+      (config as any)[key] = value
+      
+      // Handle config changes that require reinitialization or updates
+      if (['SIM_RESOLUTION', 'DYE_RESOLUTION', 'BLOOM_RESOLUTION', 'SUNRAYS_RESOLUTION'].includes(key)) {
+        // Reinitialize framebuffers for resolution changes
+        initFramebuffers()
+      } else if (key === 'BLOOM' || key === 'SUNRAYS' || key === 'SHADING') {
+        // Update display keywords for visual toggles
+        updateKeywords()
+      }
+    },
+    getConfig: () => ({ ...config })
   }
 }
