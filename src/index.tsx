@@ -160,6 +160,7 @@ const App = () => {
       <Canvas
         ref={canvasRef}
         showPathManager
+        showConfigPanel
         initialAnimation={{ path: 'oval', options: { maxLoops: 1 } }}
       />
 
